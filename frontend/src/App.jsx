@@ -3,6 +3,12 @@ import { Box, Heading, Text, SimpleGrid, Container, Modal, ModalOverlay, ModalCo
 
 import "./App.css"; 
 
+
+// Define Loading Spinner Component
+const Loading = () => {
+  return <div className="loading"></div>;
+};
+
 const App = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,6 +16,8 @@ const App = () => {
 
   const [selectedResource, setSelectedResource] = useState(null); // State for selected resource
   const { isOpen, onOpen, onClose } = useDisclosure(); // Chakra UI's modal controls
+
+
 
   useEffect(() => {
     const getResources = async () => {
@@ -32,7 +40,15 @@ const App = () => {
     onOpen(); // Open the modal
   };
 
-  if (loading) return <p>Loading...</p>;
+  const Loading = () => {
+    return (
+      <div className="loading-container">
+        <div className="loading"></div>
+      </div>
+    );
+  };
+
+  if (loading) return <Loading />
   if (error) return <p>Error: {error}</p>;
 
   return (

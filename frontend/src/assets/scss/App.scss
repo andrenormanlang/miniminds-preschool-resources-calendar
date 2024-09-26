@@ -8,6 +8,53 @@ $primary-color: #1a202c; // Dark color for background
 $secondary-color: #2c5282; // Blue color for headings
 $light-blue: #ebf8ff; // Light blue for card background
 
+@keyframes clip2 {
+  0% {
+    transform: rotate(0deg) scale(1);
+    border-color: #665191;
+    border-bottom-color: transparent;
+  }
+  25% {
+    transform: rotate(90deg) scale(1);
+    border-color: #d45087;
+    border-bottom-color: transparent;
+  }
+  50% {
+    transform: rotate(180deg) scale(1);
+    border-color: #ff7c43;
+    border-bottom-color: transparent;
+  }
+  75% {
+    transform: rotate(270deg) scale(1);
+    border-color: #00a6ce;
+    border-bottom-color: transparent;
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    border-color: #665191;
+    border-bottom-color: transparent;
+  }
+}
+
+.loading-container {
+  display: grid;
+  place-items: center; /* Centers both horizontally and vertically */
+  height: 100vh;
+  width: 100vw;
+}
+
+.loading {
+  background: transparent !important;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 100%;
+  border: 4px solid;
+  border-color: red;
+  border-bottom-color: transparent;
+  display: inline-block;
+  animation: clip2 1s 0s infinite linear;
+}
+
 // App container styling
 .app-container {
   background-color: $primary-color; // Apply background color uniformly
