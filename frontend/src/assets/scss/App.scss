@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+// Variables
+$primary-color: #1a202c; // Dark color for background
+$secondary-color: #2c5282; // Blue color for headings
+$light-blue: #ebf8ff; // Light blue for card background
+
+// App container styling
+.app-container {
+  background-color: $primary-color; // Apply background color uniformly
+  color: white;
+  min-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4rem 2rem; // Increased padding for better layout
+  box-sizing: border-box;
+}
+
+// Resource card custom styles
+.resource-card {
+  background-color: $light-blue;
+  color: $secondary-color;
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.05); // Slight zoom on hover
+  }
+
+  h2 {
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin-bottom: 0.25rem;
+  }
+}
+
