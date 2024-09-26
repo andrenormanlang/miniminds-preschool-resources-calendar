@@ -1,13 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Global Font Settings */
+body {
+  font-family: 'ABeeZee', sans-serif;
+}
 
-// Variables
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Montserrat Alternates", system-ui;
+  font-weight: 700;
+}
+
+/* Variables */
 $primary-color: #1a202c; // Dark color for background
 $secondary-color: #2c5282; // Blue color for headings
 $light-blue: #ebf8ff; // Light blue for card background
+$light-overlay: rgba(0, 0, 0, 0.4); // Overlay to increase contrast
+$highlight-color: #ffca28; // Color for highlights and badges
 
+/* Define an array of background colors with improved contrast */
+$colors: (
+  color-0: #ff7043,
+  color-1: #d45087,
+  color-2: #00a6ce,
+  color-3: #6b5b95,
+  color-4: #8bc34a,
+  color-5: #f95d6a,
+  color-6: #ffca28,
+  color-7: #ab47bc
+);
+
+/* Set up classes for background colors with muted shades */
+@each $class, $color in $colors {
+  .#{$class} {
+    background-color: darken($color, 10%);
+  }
+}
+
+/* Loading Spinner */
 @keyframes clip2 {
   0% {
     transform: rotate(0deg) scale(1);
@@ -37,54 +70,156 @@ $light-blue: #ebf8ff; // Light blue for card background
 }
 
 .loading-container {
-  display: grid;
-  place-items: center; /* Centers both horizontally and vertically */
-  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 9999;
 }
 
 .loading {
-  background: transparent !important;
   width: 4rem;
   height: 4rem;
-  border-radius: 100%;
+  border-radius: 50%;
   border: 4px solid;
   border-color: red;
   border-bottom-color: transparent;
   display: inline-block;
-  animation: clip2 1s 0s infinite linear;
+  animation: clip2 1s infinite linear;
 }
 
-// App container styling
-.app-container {
-  background-color: $primary-color; // Apply background color uniformly
-  color: white;
-  min-width: 100vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 4rem 2rem; // Increased padding for better layout
-  box-sizing: border-box;
-}
-
-// Resource card custom styles
+/* Card Styling */
 .resource-card {
-  background-color: $light-blue;
-  color: $secondary-color;
+  position: relative;
+  color: white;
   transition: transform 0.2s ease-in-out;
+  overflow: hidden;
+  font-family: 'ABeeZee', sans-serif;
 
   &:hover {
-    transform: scale(1.05); // Slight zoom on hover
+    transform: scale(1.05);
+  }
+
+  .image-wrapper {
+    position: relative;
+    img {
+      filter: brightness(80%);
+      transition: all 0.3s ease;
+    }
+    &:hover img {
+      filter: brightness(100%);
+    }
+  }
+
+  /* Apply overlay over image */
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: $light-overlay;
+  }
+
+  .content {
+    z-index: 2;
+    position: relative;
+    padding: 10px;
   }
 
   h2 {
-    font-weight: 600;
-    font-size: 1.25rem;
+    font-weight: 700;
+    font-size: 1.5rem;
     margin-bottom: 0.5rem;
+    font-family: 'Montserrat Alternates', sans-serif;
+    color: white;
   }
 
   p {
+    font-size: 1rem;
     margin-bottom: 0.25rem;
+  }
+
+  .chakra-tag {
+    margin-right: 0.5rem;
+  }
+
+  /* Date badge styling */
+  .date-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    background-color: #ffca28;
+    color: black;
+    padding: 0.25rem 0.75rem;
+    border-radius: 5px;
+    font-weight: bold;
+    font-family: 'Montserrat Alternates', sans-serif;
   }
 }
 
+/* Modal Card Styling */
+.modal-content {
+  background-color: $primary-color;
+  border-radius: 15px;
+  overflow: hidden;
+  color: white;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+  font-family: 'ABeeZee', sans-serif;
+
+  /* Image in modal */
+  img {
+    width: 100%;
+    height: auto;
+    max-height: 250px;
+    object-fit: cover;
+    margin: 0;
+  }
+
+  /* Heading inside modal */
+  .modal-header {
+    text-align: center;
+    font-family: 'Montserrat Alternates', sans-serif;
+    font-weight: bold;
+    margin-top: 0.5rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    font-family: 'ABeeZee', sans-serif;
+
+    .subtitle {
+      font-family: 'Montserrat Alternates', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: $highlight-color;
+    }
+
+    /* Description styling */
+    .description {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+      margin-top: 1rem;
+    }
+  }
+}
+
+/* Date badge inside modal */
+.modal-date-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 0.5rem;
+  font-weight: bold;
+  border-radius: 8px;
+  color: $highlight-color;
+  font-family: 'Montserrat Alternates', sans-serif;
+}
