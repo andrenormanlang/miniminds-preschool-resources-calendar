@@ -14,7 +14,8 @@ export const createResource = async (data: any): Promise<Resource> => {
   return await prisma.resource.create({
     data: {
       ...data,
-      eventDate: new Date(data.eventDate),
+      eventDate: data.eventDate ? new Date(data.eventDate) : null,
+      rating: Number(data.rating),
     },
   });
 };
@@ -25,6 +26,7 @@ export const updateResource = async (id: number, data: any): Promise<Resource> =
     data: {
       ...data,
       eventDate: data.eventDate ? new Date(data.eventDate) : undefined,
+      rating: data.rating ? Number(data.rating) : undefined,
     },
   });
 };
@@ -73,3 +75,5 @@ export const bulkDeleteResources = async (ids: number[]): Promise<number> => {
   });
   return result.count;
 };
+
+

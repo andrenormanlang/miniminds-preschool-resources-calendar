@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import {
   getAllResources,
   getResourceById,
@@ -7,8 +7,10 @@ import {
   deleteResource,
   bulkCreateResources,
   bulkUpdateResources,
-  bulkDeleteResources
+  bulkDeleteResources,
 } from '../controllers/resourceController.js';
+import multer from 'multer';
+import { storage } from '../utils/cloudinary.js';
 
 const router = Router();
 
@@ -23,4 +25,19 @@ router.post('/bulk', bulkCreateResources);
 router.post('/bulk-update', bulkUpdateResources);
 router.delete('/', bulkDeleteResources);
 
+const upload = multer({ storage });
+
+router.post(
+  '/upload',
+  upload.single('image'),
+  async (req: Request, res: Response) => {
+    if (req.file && req.file.path) {
+      res.json({ imageUrl: req.file.path });
+    } else {
+      res.status(400).json({ message: 'No file uploaded' });
+    }
+  }
+);
+
 export default router;
+

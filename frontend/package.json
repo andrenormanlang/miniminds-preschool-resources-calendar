@@ -16,6 +16,7 @@
     "framer-motion": "^11.7.0",
     "react": "19.0.0-rc-778e1ed2-20240926",
     "react-dom": "19.0.0-rc-778e1ed2-20240926",
+    "react-dropzone": "^14.2.9",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7"
   },
