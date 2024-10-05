@@ -14,7 +14,7 @@ export const storage = new CloudinaryStorage({
   params: async (req, file) => {
     return {
       folder: 'miniminds', 
-      allowed_formats: ['jpg', 'png', 'jpeg', 'gif'],
+      allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp'],
       public_id: `${Date.now()}-${file.originalname}`, 
     };
   },

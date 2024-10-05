@@ -1,3 +1,5 @@
+// src/App.tsx
+
 import { useEffect, useState } from 'react';
 import {
   Box,
@@ -191,7 +193,7 @@ const App = () => {
             Preschool Learning Resources
           </Heading>
           <Button colorScheme="teal" onClick={handleAddEvent}>
-            Add Event
+            Lägg till Evenemang
           </Button>
         </Box>
         {/* Responsive grid layout */}
@@ -221,7 +223,7 @@ const App = () => {
                 p={1}
                 borderRadius="md"
               >
-                {new Date(resource.eventDate).toLocaleDateString()}
+                {new Date(resource.eventDate).toLocaleDateString('sv-SE')}
               </Badge>
 
               {/* Image */}
@@ -273,7 +275,7 @@ const App = () => {
                   fontSize="sm"
                   color="gray.700"
                 >
-                  Subject: {resource.subject}
+                  Ämne: {resource.subject}
                 </Text>
                 <Text
                   fontFamily={'AbeeZee'}
@@ -281,7 +283,7 @@ const App = () => {
                   fontSize="sm"
                   color="gray.700"
                 >
-                  Age Group: {resource.ageGroup}
+                  Åldersgrupp: {resource.ageGroup}
                 </Text>
                 <Text
                   fontFamily={'AbeeZee'}
@@ -289,7 +291,7 @@ const App = () => {
                   fontSize="sm"
                   color="gray.700"
                 >
-                  Rating: {resource.rating}
+                  Betyg: {resource.rating}
                 </Text>
               </Box>
             </Box>
@@ -298,12 +300,21 @@ const App = () => {
 
         {/* Event Form Modal */}
         {isFormOpen && (
-          <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} size="lg" isCentered>
+          <Modal
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
+            size="lg"
+            isCentered
+            scrollBehavior="inside" // Enable scrolling inside the modal
+          >
             <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>{isEditMode ? 'Edit Event' : 'Add Event'}</ModalHeader>
+            <ModalContent
+              maxHeight="80vh" // Set maximum height to 80% of viewport height
+              overflow="hidden" // Hide overflow to manage scrolling via ModalBody
+            >
+              <ModalHeader>{isEditMode ? 'Redigera Evenemang' : 'Lägg till Evenemang'}</ModalHeader>
               <ModalCloseButton />
-              <ModalBody>
+              <ModalBody overflowY="auto"> {/* Enable vertical scrolling */}
                 <EventForm
                   resource={selectedResource}
                   onSubmit={handleFormSubmit}
@@ -321,7 +332,6 @@ const App = () => {
             onClose={onClose}
             onEdit={() => handleEditEvent(selectedResource)}
             onDelete={() => handleDeleteEvent(selectedResource.id)}
-            bgColor="white"
           />
         )}
       </Container>
