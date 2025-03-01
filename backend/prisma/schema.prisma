@@ -7,16 +7,32 @@ datasource db {
   url      = "postgresql://neondb_owner:IN49KBWYHzXM@ep-aged-bird-a6no7ukt.us-west-2.aws.neon.tech/mini_minds?sslmode=require"
 }
 
+model User {
+  id              Int       @id @default(autoincrement())
+  clerkId         String    @unique  // Store Clerk's user ID
+  email           String    @unique
+  firstName       String?
+  lastName        String?
+  role            String    @default("user")  // "user", "admin", etc.
+  isApproved      Boolean   @default(false)   // Approval status
+  resources       Resource[] // Relation to resources created by this user
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
 model Resource {
   id          Int      @id @default(autoincrement())
   title       String
-  type        String   // e.g., book, video, game
-  subject     String   // e.g., math, art, reading
-  ageGroup    String   // e.g., 3-4, 4-5, 5-6
+  type        String  
+  subject     String  
+  ageGroup    String  
   rating      Int
-  imageUrl    String?  // Renamed from link to imageUrl
-  description String?  // Optional description for the resource
-  eventDate   DateTime // New field for event date
+  imageUrl    String?  
+  description String?  
+  eventDate   DateTime 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  userId      Int?     // Can be null for imported resources
+  user        User?    @relation(fields: [userId], references: [id])
 }

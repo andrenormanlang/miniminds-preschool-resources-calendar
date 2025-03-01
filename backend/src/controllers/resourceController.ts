@@ -2,6 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import * as resourceService from '../services/resourceService.js';
 import { validationResult } from 'express-validator';
 
+
+// extended request interface for auth
+interface AuthRequest extends Request {
+  user?: {
+    id: number;
+    clerkId: string;
+    role: string;
+    isApproved: boolean;
+  };
+}
+
 export const getAllResources = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const resources = await resourceService.getAllResources();
@@ -24,7 +35,7 @@ export const getResourceById = async (req: Request, res: Response, next: NextFun
   }
 };
 
-export const createResource = async (req: Request, res: Response, next: NextFunction) => {
+export const createResource = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     // Validate request
     const errors = validationResult(req);
@@ -32,14 +43,19 @@ export const createResource = async (req: Request, res: Response, next: NextFunc
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const resource = await resourceService.createResource(req.body);
+    // Get user ID if authenticated
+    const userId = req.user?.id;
+    
+    // If no userId is provided, create resource without user association
+    const resource = await resourceService.createResource(req.body, userId);
+    
     res.status(201).json(resource);
   } catch (error) {
     next(error);
   }
 };
 
-export const updateResource = async (req: Request, res: Response, next: NextFunction) => {
+export const updateResource = async (req: AuthRequest, res: Response, next: NextFunction)=> {
   try {
     const resource = await resourceService.updateResource(parseInt(req.params.id), req.body);
     res.json(resource);

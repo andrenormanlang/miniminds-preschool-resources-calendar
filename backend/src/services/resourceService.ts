@@ -10,17 +10,34 @@ export const getResourceById = async (id: number): Promise<Resource | null> => {
   return await prisma.resource.findUnique({ where: { id } });
 };
 
-export const createResource = async (data: any): Promise<Resource> => {
+export const createResource = async (data: any, userId?: number): Promise<Resource> => {
   return await prisma.resource.create({
     data: {
       ...data,
-      eventDate: data.eventDate ? new Date(data.eventDate) : null,
-      rating: Number(data.rating),
+      eventDate: data.eventDate ? new Date(data.eventDate) : new Date(),
+      rating: Number(data.rating) || 1,
+      // Only include userId field if userId is provided
+      ...(userId ? { userId } : {})
     },
   });
 };
 
-export const updateResource = async (id: number, data: any): Promise<Resource> => {
+export const updateResource = async (id: number, data: any, userId: number, isAdmin: boolean): Promise<Resource> => {
+  // First check if the user has permission to update this resource
+  const resource = await prisma.resource.findUnique({ 
+    where: { id },
+    include: { user: true }
+  });
+  
+  if (!resource) {
+    throw new Error('Resource not found');
+  }
+  
+  // Only allow update if the user is the owner or an admin
+  if (!isAdmin && resource.userId !== userId) {
+    throw new Error('Not authorized to update this resource');
+  }
+  
   return await prisma.resource.update({
     where: { id },
     data: {
@@ -30,7 +47,6 @@ export const updateResource = async (id: number, data: any): Promise<Resource> =
     },
   });
 };
-
 export const deleteResource = async (id: number): Promise<void> => {
   await prisma.resource.delete({ where: { id } });
 };
