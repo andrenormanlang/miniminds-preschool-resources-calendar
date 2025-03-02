@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { ChakraProvider } from "@chakra-ui/react";
@@ -13,10 +13,15 @@ import "./App.css";
 import Loading from "./components/Loading";
 import { useState } from "react";
 import AdminDashboard from "./pages/AdminDashboard";
+import { useAuthFetch } from "./utils/authUtils";
 
 const App = () => {
   const { isLoaded, isSignedIn, user } = useUser();
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
+
+  // Add a ref to track if we've already synced
+  const hasSyncedRef = useRef(false);
 
   useEffect(() => {
     const syncUserWithBackend = async () => {
@@ -51,53 +56,51 @@ const App = () => {
     syncUserWithBackend();
   }, [isSignedIn, user]);
 
-  useEffect(() => {
-    // Synchronize role metadata from Clerk to your database
-    const syncRoleMetadata = async () => {
-      if (isSignedIn && user) {
+  // Updated syncRoleMetadata with proper safeguards
+  const syncRoleMetadata = async () => {
+    try {
+      // Guard clause to prevent infinite loops
+      if (!isSignedIn || !user || hasSyncedRef.current) return;
+
+      // Mark that we've started syncing
+      hasSyncedRef.current = true;
+
+      const backendUser = await authFetch(
+        "http://localhost:4000/api/users/current"
+      );
+
+      if (backendUser && backendUser.role) {
         try {
-          // Use user ID directly
-          const response = await fetch(
-            `http://localhost:4000/api/users/current`,
-            {
-              headers: {
-                Authorization: `Bearer ${user.id}`,
-              },
-            }
-          );
-
-          if (response.ok) {
-            const userData = await response.json();
-
-            // Check if the role in your DB matches the role in Clerk
-            const clerkRole = user.publicMetadata.role;
-
-            if (
-              userData.role !== clerkRole ||
-              userData.isApproved !== user.publicMetadata.isApproved
-            ) {
-              // Update Clerk with the role from your database
-              await user.update({
-                publicMetadata: {
-                  ...user.publicMetadata,
-                  role: userData.role,
-                  isApproved: userData.isApproved,
-                },
-              });
-
-              console.log("Updated Clerk metadata with role:", userData.role);
-            }
+          // Only update if needed
+          const currentMetadata = user.unsafeMetadata || {};
+          if (currentMetadata.role !== backendUser.role) {
+            await user.update({
+              unsafeMetadata: { role: backendUser.role },
+            });
+            console.log("Role synced to Clerk:", backendUser.role);
           } else {
-            console.error("Failed to fetch user data from backend");
+            console.log("Role already synced, skipping update");
           }
-        } catch (err) {
-          console.error("Error syncing roles:", err);
+        } catch (clerkError) {
+          console.error("Clerk API error:", clerkError);
         }
       }
-    };
+    } catch (error) {
+      console.error("Error syncing roles:", error);
+    }
+  };
 
-    syncRoleMetadata();
-  }, [isSignedIn, user]);
+  // Update the useEffect to only run once when user is available
+  useEffect(() => {
+    if (isSignedIn && user && !hasSyncedRef.current) {
+      syncRoleMetadata();
+    }
+
+    // Clean up function to reset the ref if the user changes
+    return () => {
+      hasSyncedRef.current = false;
+    };
+  }, [isSignedIn, user]); // Only re-run if auth state changes
 
   if (!isLoaded) {
     return <Loading />;

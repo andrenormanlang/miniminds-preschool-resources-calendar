@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Request, Response, NextFunction } from "express";
+import { PrismaClient } from "@prisma/client";
+import * as clerkClient from "@clerk/clerk-sdk-node";
 
 const prisma = new PrismaClient();
 
@@ -13,65 +14,100 @@ interface AuthRequest extends Request {
   };
 }
 
-export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const requireAuth = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const authHeader = req.headers.authorization;
-    
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Unauthorized' });
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Extract Clerk user ID from the header instead of verifying JWT
-    const clerkId = authHeader.split(' ')[1];
-    
-    if (!clerkId) {
-      return res.status(401).json({ message: 'Invalid authentication' });
-    }
-    
-    // Find the user in our database by clerkId
+    const clerkId = authHeader.split(" ")[1];
+
+    // Find user in our database
     const user = await prisma.user.findUnique({
-      where: { clerkId }
+      where: { clerkId },
     });
 
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json({ message: "User not found" });
     }
 
-    // Add user info to the request
+    // Set user in request object
     req.user = {
       id: user.id,
       clerkId: user.clerkId,
       role: user.role,
-      isApproved: user.isApproved
+      isApproved: user.isApproved,
     };
-    
+
     next();
   } catch (error) {
-    console.error('Auth error:', error);
-    res.status(401).json({ message: 'Authentication failed' });
+    console.error("Auth middleware error:", error);
+    return res.status(401).json({ message: "Authentication failed" });
   }
+};
+
+// Role-based access control middleware
+export const requireRole = (allowedRoles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: "Access denied. You do not have the required permissions.",
+      });
+    }
+
+    next();
+  };
+};
+
+// Approved user check middleware
+export const requireApproved = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  if (!req.user.isApproved) {
+    return res.status(403).json({
+      message: "Account not yet approved. Please wait for admin approval.",
+    });
+  }
+
+  next();
 };
 
 // For superAdmin only routes
 export const isSuperAdmin = [
   requireAuth,
   (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role !== 'superAdmin') {
-      return res.status(403).json({ message: 'SuperAdmin access required' });
+    if (req.user?.role !== "superAdmin") {
+      return res.status(403).json({ message: "SuperAdmin access required" });
     }
     next();
-  }
+  },
 ];
 
 // For admin or superAdmin routes
 export const isAdminOrSuperAdmin = [
   requireAuth,
   (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role !== 'admin' && req.user?.role !== 'superAdmin') {
-      return res.status(403).json({ message: 'Admin access required' });
+    if (req.user?.role !== "admin" && req.user?.role !== "superAdmin") {
+      return res.status(403).json({ message: "Admin access required" });
     }
     next();
-  }
+  },
 ];
 
 // For approved users (any role)
@@ -79,10 +115,10 @@ export const isApproved = [
   requireAuth,
   (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user?.isApproved) {
-      return res.status(403).json({ message: 'Account not approved yet' });
+      return res.status(403).json({ message: "Account not approved yet" });
     }
     next();
-  }
+  },
 ];
 
 export const isAdmin = isAdminOrSuperAdmin;
