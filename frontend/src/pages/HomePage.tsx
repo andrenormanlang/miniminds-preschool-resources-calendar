@@ -19,6 +19,7 @@ import {
   ModalBody,
   Flex,
   useToast,
+  Spinner,
 } from "@chakra-ui/react";
 import ModalCard from "../components/ModalCard";
 import EventForm from "../components/EventForm";
@@ -69,18 +70,18 @@ const HomePage = () => {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Get URL parameters to check if we should open the add resource form
   const params = new URLSearchParams(location.search);
-  const shouldAddResource = params.get('addResource') === 'true';
-  
+  const shouldAddResource = params.get("addResource") === "true";
+
   // Effect to open the form when the URL parameter is present
   useEffect(() => {
     if (shouldAddResource && canAddResource()) {
       handleAddEvent();
-      
+
       // Clear the URL parameter after handling it
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     }
   }, [shouldAddResource]);
 
@@ -111,7 +112,9 @@ const HomePage = () => {
     const getCurrentUserInfo = async () => {
       if (isSignedIn) {
         try {
-          const currentUser = await authFetch("http://localhost:4000/api/users/current");
+          const currentUser = await authFetch(
+            "http://localhost:4000/api/users/current"
+          );
           setCurrentUserRole(currentUser.role);
           setCurrentUserId(currentUser.id);
         } catch (err) {
@@ -127,26 +130,16 @@ const HomePage = () => {
   }, [isSignedIn, authFetch]);
 
   const handleAddEvent = () => {
-    setIsEditMode(false);
     setSelectedResource(undefined);
+    setIsEditMode(false);
     setIsFormOpen(true);
   };
 
   const handleEditEvent = (resource: Resource) => {
-    if (!isSignedIn) {
-      toast({
-        title: "Authentication required",
-        description: "You need to sign in to edit resources.",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    setIsEditMode(true);
     setSelectedResource(resource);
+    setIsEditMode(true);
     setIsFormOpen(true);
+    onClose(); // Close the detail modal when opening edit form
   };
 
   const handleCardClick = (resource: Resource) => {
@@ -158,22 +151,27 @@ const HomePage = () => {
     try {
       // Ensure the date is in ISO format
       const isoFormattedDate = new Date(data.eventDate).toISOString();
-      
+
       const payload = {
         ...data,
-        eventDate: isoFormattedDate
+        eventDate: isoFormattedDate,
       };
 
       if (isEditMode && selectedResource) {
         // For editing existing resource
-        await authFetch(`http://localhost:4000/api/resources/${selectedResource.id}`, {
-          method: "PUT",
-          body: JSON.stringify(payload)
-        });
+        await authFetch(
+          `http://localhost:4000/api/resources/${selectedResource.id}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(payload),
+          }
+        );
 
         // Update local state
         setResources(
-          resources.map((r) => (r.id === selectedResource.id ? { ...r, ...payload } : r))
+          resources.map((r) =>
+            r.id === selectedResource.id ? { ...r, ...payload } : r
+          )
         );
 
         toast({
@@ -183,10 +181,13 @@ const HomePage = () => {
         });
       } else {
         // For creating new resource
-        const newResource = await authFetch("http://localhost:4000/api/resources", {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
+        const newResource = await authFetch(
+          "http://localhost:4000/api/resources",
+          {
+            method: "POST",
+            body: JSON.stringify(payload),
+          }
+        );
 
         setResources([newResource, ...resources]);
 
@@ -227,13 +228,13 @@ const HomePage = () => {
       setResources((prevResources) =>
         prevResources.filter((res) => res.id !== id)
       );
-      
+
       toast({
         title: "Resource deleted",
         status: "success",
         duration: 3000,
       });
-      
+
       onClose();
     } catch (err) {
       console.error(err);
@@ -270,21 +271,21 @@ const HomePage = () => {
 
   // Function to check if user can add resources
   const canAddResource = () => {
-    return currentUserRole === 'admin' || currentUserRole === 'superAdmin';
+    return currentUserRole === "admin" || currentUserRole === "superAdmin";
   };
 
   // Function to check if user can edit this specific resource
   const canEditResource = (resource: Resource) => {
     if (!isSignedIn || !currentUserRole) return false;
-    
+
     // SuperAdmin can edit any resource
-    if (currentUserRole === 'superAdmin') return true;
-    
+    if (currentUserRole === "superAdmin") return true;
+
     // Admin can only edit their own resources
-    if (currentUserRole === 'admin') {
+    if (currentUserRole === "admin") {
       return resource.userId === currentUserId;
     }
-    
+
     return false;
   };
 
@@ -308,9 +309,10 @@ const HomePage = () => {
         right: 0,
         bottom: 0,
         left: 0,
-        bgGradient: "linear(to-r, red.500, orange.500, yellow.500, green.500, blue.500, purple.500)",
+        bgGradient:
+          "linear(to-r, red.500, orange.500, yellow.500, green.500, blue.500, purple.500)",
         opacity: 0.8,
-        zIndex: -1
+        zIndex: -1,
       }}
       p={8}
     >
@@ -319,7 +321,7 @@ const HomePage = () => {
         <Box
           w="100%"
           display="flex"
-          justifyContent="center" 
+          justifyContent="center"
           alignItems="center"
           mb={8}
           flexDirection={["column", "column", "row"]}
@@ -339,9 +341,16 @@ const HomePage = () => {
             Preschool Learning Resources
           </Heading>
         </Box>
-        
+
         {/* Resource Grid */}
-        {resources.length > 0 ? (
+        {loading ? (
+          <Box textAlign="center" py={10}>
+            <Spinner size="xl" color="white" />
+            <Text mt={4} color="white" fontSize="lg">
+              Loading resources...
+            </Text>
+          </Box>
+        ) : resources.length > 0 ? (
           <SimpleGrid columns={[1, null, 2, 3]} spacing={10} px={[2, 4, 6]}>
             {resources.map((resource) => (
               <Box
@@ -355,6 +364,9 @@ const HomePage = () => {
                 cursor="pointer"
                 transition="transform 0.2s"
                 _hover={{ transform: "scale(1.05)" }}
+                height="100%"
+                display="flex"
+                flexDirection="column"
               >
                 {/* Date Badge */}
                 <Badge
@@ -375,71 +387,35 @@ const HomePage = () => {
                 <Image
                   src={
                     resource.imageUrl ||
-                    "https://via.placeholder.com/300x150?text=No+Image"
+                    "https://via.placeholder.com/300x200?text=No+Image"
                   }
                   alt={resource.title}
-                  objectFit="cover"
+                  h="180px"
                   w="100%"
-                  h="150px"
-                  fallbackSrc="https://via.placeholder.com/300x150?text=Loading..."
+                  objectFit="cover"
                 />
 
-                {/* Card Content */}
-                <Box p={6}>
-                  <Box display="flex" alignItems="baseline" mb={2}>
-                    <Tag
-                      fontFamily={"AbeeZee"}
-                      fontWeight={"700"}
-                      backgroundColor="blue.600"
-                      color="white"
-                      mr={2}
-                    >
-                      {resource.subject}
-                    </Tag>
-                    <Tag
-                      fontFamily={"AbeeZee"}
-                      fontWeight={"700"}
-                      backgroundColor="green.600"
-                      color="white"
-                    >
-                      {resource.ageGroup} år
-                    </Tag>
-                  </Box>
-
-                  <Heading
-                    fontFamily="Montserrat Alternates"
-                    fontWeight={"900"}
-                    as="h2"
-                    size="md"
-                    mb={2}
-                    color="blue.900"
-                  >
+                {/* Content */}
+                <Box p={4} flex="1" display="flex" flexDirection="column">
+                  <Heading size="md" mb={2} noOfLines={2}>
                     {resource.title}
                   </Heading>
-                  <Text
-                    fontFamily={"AbeeZee"}
-                    fontWeight={"700"}
-                    fontSize="sm"
-                    color="gray.700"
-                  >
-                    Ämne: {resource.subject}
+
+                  <Text fontSize="sm" color="gray.600" mb={2} noOfLines={3}>
+                    {resource.description}
                   </Text>
-                  <Text
-                    fontFamily={"AbeeZee"}
-                    fontWeight={"600"}
-                    fontSize="sm"
-                    color="gray.700"
-                  >
-                    Åldersgrupp: {resource.ageGroup}
-                  </Text>
-                  <Text
-                    fontFamily={"AbeeZee"}
-                    fontWeight={"600"}
-                    fontSize="sm"
-                    color="gray.700"
-                  >
-                    Betyg: {resource.rating}
-                  </Text>
+
+                  <Flex mt="auto" wrap="wrap" gap={1}>
+                    <Tag size="sm" colorScheme="purple">
+                      {resource.type}
+                    </Tag>
+                    <Tag size="sm" colorScheme="blue">
+                      {resource.subject}
+                    </Tag>
+                    <Tag size="sm" colorScheme="green">
+                      {resource.ageGroup}
+                    </Tag>
+                  </Flex>
                 </Box>
               </Box>
             ))}
@@ -454,16 +430,31 @@ const HomePage = () => {
       </Container>
 
       {/* Resource Detail Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{selectedResource?.title}</ModalHeader>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="xl"
+        scrollBehavior="inside"
+        isCentered
+      >
+        <ModalOverlay backdropFilter="blur(2px)" />
+        <ModalContent maxW="800px" borderRadius="lg" boxShadow="2xl">
+          <ModalHeader
+            pb={1}
+            fontSize="2xl"
+            borderBottom="1px solid"
+            borderColor="gray.200"
+          >
+            {selectedResource?.title}
+          </ModalHeader>
           <ModalCloseButton />
-          <ModalBody pb={6}>
+          <ModalBody py={4}>
             {selectedResource && (
               <ModalCard
                 resource={selectedResource}
-                onEdit={handleEditEvent}
+                isOpen={isOpen}
+                onClose={onClose}
+                onEdit={() => handleEditEvent(selectedResource)}
                 onDelete={() => handleDeleteEvent(selectedResource.id)}
                 canEdit={canEditResource(selectedResource)}
                 canDelete={canDeleteResource(selectedResource)}
@@ -474,8 +465,13 @@ const HomePage = () => {
       </Modal>
 
       {/* Form Modal */}
-      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} size="xl">
-        <ModalOverlay />
+      <Modal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        size="xl"
+        scrollBehavior="inside"
+      >
+        <ModalOverlay backdropFilter="blur(2px)" />
         <ModalContent>
           <ModalHeader>
             {isEditMode ? "Edit Resource" : "Add New Resource"}

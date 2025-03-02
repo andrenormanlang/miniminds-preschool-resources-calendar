@@ -83,8 +83,13 @@ export const createResource = async (data: any, userId: number | undefined, auto
     
   return prisma.resource.create({
     data: {
-      ...data,
-      eventDate, // Use the properly formatted date
+      title: data.title,
+      type: data.type,
+      subject: data.subject,
+      ageGroup: data.ageGroup,
+      description: data.description,
+      eventDate: eventDate,
+      imageUrl: data.imageUrl,
       isApproved: autoApprove, // Only auto-approve if superAdmin
       userId // Link to the creating user
     },

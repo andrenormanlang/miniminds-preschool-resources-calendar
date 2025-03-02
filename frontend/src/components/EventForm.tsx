@@ -1,6 +1,6 @@
 // src/components/EventForm.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -15,6 +15,13 @@ import {
   Spinner,
   Text,
   useToast,
+  Select,
+  FormErrorMessage,
+  VStack,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Flex
 } from '@chakra-ui/react';
 import { Resource } from '../types/type';
 import { useDropzone } from 'react-dropzone';
@@ -25,7 +32,6 @@ type FormData = {
   type: string;
   subject: string;
   ageGroup: string;
-  rating: number;
   description: string;
   eventDate: string;
   imageUrl: string;
@@ -36,6 +42,54 @@ type EventFormProps = {
   onSubmit: (data: FormData) => void;
 };
 
+const ageGroupOptions = [
+  { value: '1-2 years', label: '1-2 years (Toddlers)' },
+  { value: '2-3 years', label: '2-3 years (Early Preschool)' },
+  { value: '3-4 years', label: '3-4 years (Preschool)' },
+  { value: '4-5 years', label: '4-5 years (Pre-Kindergarten)' },
+  { value: '5-6 years', label: '5-6 years (Kindergarten)' }
+];
+
+const subjectOptions = [
+  { value: 'Literacy', label: 'Literacy & Language' },
+  { value: 'Numeracy', label: 'Numeracy & Math' },
+  { value: 'Science', label: 'Science & Discovery' },
+  { value: 'Arts', label: 'Arts & Crafts' },
+  { value: 'Music', label: 'Music & Movement' },
+  { value: 'SocialEmotional', label: 'Social-Emotional Learning' },
+  { value: 'PhysicalDevelopment', label: 'Physical Development' },
+  { value: 'SensoryPlay', label: 'Sensory Play' },
+  { value: 'ProblemSolving', label: 'Critical Thinking & Problem Solving' },
+  { value: 'WorldCultures', label: 'World Cultures & Diversity' },
+  { value: 'NatureOutdoors', label: 'Nature & Outdoor Learning' },
+  { value: 'PlayfulLearning', label: 'Playful Learning' },
+  { value: 'Other', label: 'Other' }
+];
+
+const typeOptions = [
+  { value: 'Activity', label: 'Activity' },
+  { value: 'Printable', label: 'Printable Worksheet' },
+  { value: 'Game', label: 'Game' },
+  { value: 'Book', label: 'Book Recommendation' },
+  { value: 'Song', label: 'Song or Rhyme' },
+  { value: 'Craft', label: 'Craft Project' },
+  { value: 'Experiment', label: 'Science Experiment' },
+  { value: 'OutdoorActivity', label: 'Outdoor Activity' },
+  { value: 'DigitalResource', label: 'Digital Resource' },
+  { value: 'LessonPlan', label: 'Lesson Plan' },
+  { value: 'VideoLink', label: 'Video Link' },
+  { value: 'ParentTip', label: 'Parent Tip' },
+  { value: 'Other', label: 'Other' }
+];
+
+const ratingOptions = [
+  { value: 5, label: '⭐⭐⭐⭐⭐ (5) - Outstanding' },
+  { value: 4, label: '⭐⭐⭐⭐ (4) - Very Good' },
+  { value: 3, label: '⭐⭐⭐ (3) - Good' },
+  { value: 2, label: '⭐⭐ (2) - Fair' },
+  { value: 1, label: '⭐ (1) - Needs Improvement' }
+];
+
 const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
   const { authFetch, getToken } = useAuthFetch();
   const toast = useToast();
@@ -44,7 +98,6 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
     type: resource?.type || '',
     subject: resource?.subject || '',
     ageGroup: resource?.ageGroup || '',
-    rating: resource?.rating || 1,
     description: resource?.description || '',
     eventDate: resource?.eventDate ? new Date(resource.eventDate).toISOString().split('T')[0] : '',
     imageUrl: resource?.imageUrl || '',
@@ -151,29 +204,47 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
 
         <FormControl isRequired>
           <FormLabel>Type</FormLabel>
-          <Input name="type" value={formData.type} onChange={handleChange} />
+          <Select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+          >
+            {typeOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
         </FormControl>
 
         <FormControl isRequired>
           <FormLabel>Subject</FormLabel>
-          <Input name="subject" value={formData.subject} onChange={handleChange} />
+          <Select
+            name="subject"
+            value={formData.subject}
+            onChange={handleChange}
+          >
+            {subjectOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
         </FormControl>
 
         <FormControl isRequired>
           <FormLabel>Age Group</FormLabel>
-          <Input name="ageGroup" value={formData.ageGroup} onChange={handleChange} />
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormLabel>Rating</FormLabel>
-          <NumberInput
-            min={1}
-            max={5}
-            value={formData.rating}
-            onChange={handleNumberChange}
+          <Select
+            name="ageGroup"
+            value={formData.ageGroup}
+            onChange={handleChange}
           >
-            <NumberInputField name="rating" />
-          </NumberInput>
+            {ageGroupOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
         </FormControl>
 
         <FormControl isRequired>

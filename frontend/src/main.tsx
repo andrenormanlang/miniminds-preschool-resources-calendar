@@ -1,25 +1,26 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { ClerkProvider } from "@clerk/clerk-react";
 import { ChakraProvider } from "@chakra-ui/react";
 import App from "./App";
-import { ClerkProvider } from "@clerk/clerk-react";
+import clerkAppearance from "./utils/clerkTheme";
 import { ResourceApprovalProvider } from "./contexts/ResourceApprovalContext";
 
-// Import your Publishable Key
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// Your Clerk publishable key
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-if (!PUBLISHABLE_KEY) {
+if (!clerkPubKey) {
   throw new Error("Missing Publishable Key");
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ChakraProvider>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <ClerkProvider publishableKey={clerkPubKey} appearance={clerkAppearance}>
+      <ChakraProvider>
         <ResourceApprovalProvider>
           <App />
         </ResourceApprovalProvider>
-      </ClerkProvider>
-    </ChakraProvider>
-  </StrictMode>
+      </ChakraProvider>
+    </ClerkProvider>
+  </React.StrictMode>
 );

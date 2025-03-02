@@ -8,32 +8,31 @@ datasource db {
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  clerkId         String    @unique  // Store Clerk's user ID
-  email           String    @unique
-  firstName       String?
-  lastName        String?
-  role            String    @default("user")  // "user", "admin", "superAdmin"
-  isApproved      Boolean   @default(false)   // Approval status for the user account
-  resources       Resource[] // Relation to resources created by this user
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id         Int        @id @default(autoincrement())
+  clerkId    String     @unique // Store Clerk's user ID
+  email      String     @unique
+  firstName  String?
+  lastName   String?
+  role       String     @default("user") // "user", "admin", "superAdmin"
+  isApproved Boolean    @default(false) // Approval status for the user account
+  resources  Resource[] // Relation to resources created by this user
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 }
 
 model Resource {
   id          Int      @id @default(autoincrement())
   title       String
-  type        String  
-  subject     String  
-  ageGroup    String  
-  rating      Int
-  imageUrl    String?  
-  description String?  
-  eventDate   DateTime 
-  isApproved  Boolean  @default(false)  // New field for resource approval status
+  type        String
+  subject     String
+  ageGroup    String
+  description String?
+  eventDate   DateTime
+  imageUrl    String? // Added the missing imageUrl field
+  isApproved  Boolean  @default(false) // New field for resource approval status
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  userId      Int?     // Can be null for imported resources
-  user        User?    @relation(fields: [userId], references: [id])
+
+  userId Int? // Can be null for imported resources
+  user   User? @relation(fields: [userId], references: [id])
 }
