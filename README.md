@@ -96,4 +96,4 @@ If you have ideas for new features or find any bugs:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-Made with ❤️ for little learners everywhere 🌈 
+Made with ❤️ for little learners everywhere 🌈
