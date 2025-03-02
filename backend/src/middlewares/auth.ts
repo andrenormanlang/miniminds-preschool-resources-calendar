@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
-import fetch from 'node-fetch';
 
 const prisma = new PrismaClient();
 
@@ -15,37 +13,24 @@ interface AuthRequest extends Request {
   };
 }
 
-const CLERK_PEM_KEY = process.env.CLERK_PEM_KEY || '';
-
-// Cache for the JWK keys
-let jwks: any = null;
-let lastFetched = 0;
-
-const fetchJwks = async () => {
-  // Only fetch if we haven't fetched in the last hour
-  if (jwks && Date.now() - lastFetched < 3600000) {
-    return jwks;
-  }
-  
-  const response = await fetch('https://clerk.vast-civet-74.accounts.dev/.well-known/jwks.json');
-  jwks = await response.json();
-  lastFetched = Date.now();
-  return jwks;
-};
-
 export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
+    
     if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded: any = jwt.verify(token, CLERK_PEM_KEY, { algorithms: ['RS256'] });
+    // Extract Clerk user ID from the header instead of verifying JWT
+    const clerkId = authHeader.split(' ')[1];
+    
+    if (!clerkId) {
+      return res.status(401).json({ message: 'Invalid authentication' });
+    }
     
     // Find the user in our database by clerkId
     const user = await prisma.user.findUnique({
-      where: { clerkId: decoded.sub }
+      where: { clerkId }
     });
 
     if (!user) {
@@ -63,20 +48,33 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     next();
   } catch (error) {
     console.error('Auth error:', error);
-    res.status(401).json({ message: 'Invalid token' });
+    res.status(401).json({ message: 'Authentication failed' });
   }
 };
 
-export const isAdmin = [
+// For superAdmin only routes
+export const isSuperAdmin = [
   requireAuth,
   (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role !== 'admin') {
+    if (req.user?.role !== 'superAdmin') {
+      return res.status(403).json({ message: 'SuperAdmin access required' });
+    }
+    next();
+  }
+];
+
+// For admin or superAdmin routes
+export const isAdminOrSuperAdmin = [
+  requireAuth,
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (req.user?.role !== 'admin' && req.user?.role !== 'superAdmin') {
       return res.status(403).json({ message: 'Admin access required' });
     }
     next();
   }
 ];
 
+// For approved users (any role)
 export const isApproved = [
   requireAuth,
   (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -86,3 +84,5 @@ export const isApproved = [
     next();
   }
 ];
+
+export const isAdmin = isAdminOrSuperAdmin;

@@ -2,8 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as resourceService from '../services/resourceService.js';
 import { validationResult } from 'express-validator';
 
-
-// extended request interface for auth
+// Extended request interface for auth
 interface AuthRequest extends Request {
   user?: {
     id: number;
@@ -15,7 +14,41 @@ interface AuthRequest extends Request {
 
 export const getAllResources = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const resources = await resourceService.getAllResources();
+    // Regular users only see approved resources
+    const resources = await resourceService.getAllResources(true);
+    res.json(resources);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllResourcesAdmin = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    // SuperAdmin can see all resources
+    const isSuperAdmin = req.user?.role === 'superAdmin';
+    const resources = isSuperAdmin 
+      ? await resourceService.getAllResources(false) 
+      : await resourceService.getUserResources(req.user?.id || 0);
+    res.json(resources);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPendingResources = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    // Only superAdmin can see pending resources
+    const resources = await resourceService.getPendingResources();
+    res.json(resources);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserResources = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id || 0;
+    const resources = await resourceService.getUserResources(userId);
     res.json(resources);
   } catch (error) {
     next(error);
@@ -25,11 +58,10 @@ export const getAllResources = async (req: Request, res: Response, next: NextFun
 export const getResourceById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const resource = await resourceService.getResourceById(parseInt(req.params.id));
-    if (resource) {
-      res.json(resource);
-    } else {
-      res.status(404).json({ message: 'Resource not found' });
+    if (!resource) {
+      return res.status(404).json({ message: 'Resource not found' });
     }
+    res.json(resource);
   } catch (error) {
     next(error);
   }
@@ -43,11 +75,15 @@ export const createResource = async (req: AuthRequest, res: Response, next: Next
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // Get user ID if authenticated
+    // Get user ID and role if authenticated
     const userId = req.user?.id;
+    const userRole = req.user?.role || 'user';
     
-    // If no userId is provided, create resource without user association
-    const resource = await resourceService.createResource(req.body, userId);
+    // Auto-approve if created by superAdmin
+    const autoApprove = userRole === 'superAdmin';
+    
+    // Create the resource
+    const resource = await resourceService.createResource(req.body, userId, autoApprove);
     
     res.status(201).json(resource);
   } catch (error) {
@@ -55,23 +91,52 @@ export const createResource = async (req: AuthRequest, res: Response, next: Next
   }
 };
 
-export const updateResource = async (req: AuthRequest, res: Response, next: NextFunction)=> {
+export const updateResource = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const resource = await resourceService.updateResource(parseInt(req.params.id), req.body);
+    const userId = req.user?.id;
+    const userRole = req.user?.role || 'user';
+    
+    const resource = await resourceService.updateResource(
+      parseInt(req.params.id),
+      req.body,
+      userId,
+      userRole
+    );
     res.json(resource);
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteResource = async (req: Request, res: Response, next: NextFunction) => {
+export const approveResource = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    await resourceService.deleteResource(parseInt(req.params.id));
+    const { approve } = req.body;
+    const resourceId = parseInt(req.params.id);
+    
+    const resource = await resourceService.approveResource(resourceId, !!approve);
+    res.json(resource);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteResource = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id;
+    const userRole = req.user?.role || 'user';
+    
+    await resourceService.deleteResource(
+      parseInt(req.params.id),
+      userId,
+      userRole
+    );
     res.json({ message: 'Resource deleted' });
   } catch (error) {
     next(error);
   }
 };
+
+
 
 export const bulkCreateResources = async (req: Request, res: Response, next: NextFunction) => {
   try {

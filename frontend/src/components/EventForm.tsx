@@ -14,9 +14,11 @@ import {
   Image,
   Spinner,
   Text,
+  useToast,
 } from '@chakra-ui/react';
 import { Resource } from '../types/type';
 import { useDropzone } from 'react-dropzone';
+import { useAuthFetch } from '../utils/authUtils';
 
 type FormData = {
   title: string;
@@ -35,6 +37,8 @@ type EventFormProps = {
 };
 
 const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
+  const { authFetch, getToken } = useAuthFetch();
+  const toast = useToast();
   const [formData, setFormData] = useState<FormData>({
     title: resource?.title || '',
     type: resource?.type || '',
@@ -42,7 +46,7 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
     ageGroup: resource?.ageGroup || '',
     rating: resource?.rating || 1,
     description: resource?.description || '',
-    eventDate: resource?.eventDate || '',
+    eventDate: resource?.eventDate ? new Date(resource.eventDate).toISOString().split('T')[0] : '',
     imageUrl: resource?.imageUrl || '',
   });
 
@@ -56,15 +60,36 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
     setUploading(true);
 
     try {
+      const token = await getToken();
+      
       const response = await fetch('http://localhost:4000/api/resources/upload', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: uploadData,
       });
 
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
       const data = await response.json();
       setFormData({ ...formData, imageUrl: data.imageUrl });
+      
+      toast({
+        title: "Image uploaded",
+        status: "success",
+        duration: 3000,
+      });
     } catch (err) {
-      console.error(err);
+      console.error('Upload error:', err);
+      toast({
+        title: "Upload failed",
+        description: err instanceof Error ? err.message : "Failed to upload image",
+        status: "error",
+        duration: 5000,
+      });
     } finally {
       setUploading(false);
     }
@@ -83,7 +108,15 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Format the date correctly before sending up to parent
+    const formattedData = {
+      ...formData,
+      // Ensure date is in ISO format for API
+      eventDate: new Date(formData.eventDate).toISOString()
+    };
+    
+    onSubmit(formattedData);
   };
 
   return (
@@ -158,7 +191,12 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
           />
         </FormControl>
 
-        <Button type="submit" colorScheme="blue">
+        <Button 
+          type="submit" 
+          bgColor="blue.600" 
+          color="white"
+          _hover={{ bgColor: "blue.700" }}
+        >
           Submit
         </Button>
       </Stack>

@@ -1,95 +1,207 @@
-import { PrismaClient, Resource } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const getAllResources = async (): Promise<Resource[]> => {
-  return await prisma.resource.findMany();
+// Get all resources - if approved is true, only return approved resources
+export const getAllResources = async (approvedOnly = true) => {
+  const where = approvedOnly ? { isApproved: true } : {};
+  return prisma.resource.findMany({
+    where,
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
 };
 
-export const getResourceById = async (id: number): Promise<Resource | null> => {
-  return await prisma.resource.findUnique({ where: { id } });
+// Get resources that are pending approval
+export const getPendingResources = async () => {
+  return prisma.resource.findMany({
+    where: { isApproved: false },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
 };
 
-export const createResource = async (data: any, userId?: number): Promise<Resource> => {
-  return await prisma.resource.create({
+// Get resources created by a specific user
+export const getUserResources = async (userId: number) => {
+  return prisma.resource.findMany({
+    where: { userId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+};
+
+// Get a single resource by ID
+export const getResourceById = async (id: number) => {
+  return prisma.resource.findUnique({
+    where: { id },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    }
+  });
+};
+
+// Create a new resource
+export const createResource = async (data: any, userId: number | undefined, autoApprove: boolean) => {
+  // Ensure eventDate is properly formatted as ISO datetime
+  const eventDate = data.eventDate 
+    ? new Date(data.eventDate).toISOString() 
+    : undefined;
+    
+  return prisma.resource.create({
     data: {
       ...data,
-      eventDate: data.eventDate ? new Date(data.eventDate) : new Date(),
-      rating: Number(data.rating) || 1,
-      // Only include userId field if userId is provided
-      ...(userId ? { userId } : {})
+      eventDate, // Use the properly formatted date
+      isApproved: autoApprove, // Only auto-approve if superAdmin
+      userId // Link to the creating user
     },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    }
   });
 };
 
-export const updateResource = async (id: number, data: any, userId: number, isAdmin: boolean): Promise<Resource> => {
-  // First check if the user has permission to update this resource
-  const resource = await prisma.resource.findUnique({ 
-    where: { id },
-    include: { user: true }
-  });
+// Update a resource - with permission checking
+export const updateResource = async (id: number, data: any, userId: number | undefined, userRole: string) => {
+  // First, get the resource to check ownership
+  const resource = await prisma.resource.findUnique({ where: { id } });
   
   if (!resource) {
     throw new Error('Resource not found');
   }
   
-  // Only allow update if the user is the owner or an admin
-  if (!isAdmin && resource.userId !== userId) {
-    throw new Error('Not authorized to update this resource');
+  // Check permissions - admin can only update their own resources
+  if (userRole === 'admin' && resource.userId !== userId) {
+    throw new Error('You can only edit your own resources');
   }
   
-  return await prisma.resource.update({
+  // If admin is updating a resource, it needs to be re-approved
+  const isApproved = userRole === 'superAdmin' ? data.isApproved : false;
+  
+  // Format the eventDate if it exists
+  const eventDate = data.eventDate 
+    ? new Date(data.eventDate).toISOString() 
+    : undefined;
+  
+  return prisma.resource.update({
     where: { id },
     data: {
       ...data,
-      eventDate: data.eventDate ? new Date(data.eventDate) : undefined,
-      rating: data.rating ? Number(data.rating) : undefined,
+      eventDate,
+      isApproved // Updates need approval unless done by superAdmin
     },
-  });
-};
-export const deleteResource = async (id: number): Promise<void> => {
-  await prisma.resource.delete({ where: { id } });
-};
-
-export const bulkCreateResources = async (resources: any[]): Promise<Resource[]> => {
-  await prisma.resource.createMany({
-    data: resources.map((resource) => ({
-      ...resource,
-      eventDate: new Date(resource.eventDate),
-    })),
-  });
-
-  // Return the created resources
-  return await prisma.resource.findMany({
-    where: {
-      OR: resources.map((resource) => ({
-        title: resource.title,
-        eventDate: new Date(resource.eventDate),
-      })),
-    },
-    orderBy: { id: 'asc' },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    }
   });
 };
 
-export const bulkUpdateResources = async (updates: any[]): Promise<Resource[]> => {
-  const updatePromises = updates.map(async (resource) => {
-    return prisma.resource.update({
-      where: { id: resource.id },
-      data: {
-        ...resource,
-        eventDate: resource.eventDate ? new Date(resource.eventDate) : undefined,
-      },
-    });
+// Approve or reject a resource
+export const approveResource = async (id: number, approved: boolean) => {
+  return prisma.resource.update({
+    where: { id },
+    data: { isApproved: approved },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    }
   });
-
-  return await Promise.all(updatePromises);
 };
 
-export const bulkDeleteResources = async (ids: number[]): Promise<number> => {
-  const result = await prisma.resource.deleteMany({
-    where: { id: { in: ids } },
+// Delete a resource - with permission checking
+export const deleteResource = async (id: number, userId: number | undefined, userRole: string) => {
+  // First, get the resource to check ownership
+  const resource = await prisma.resource.findUnique({ where: { id } });
+  
+  if (!resource) {
+    throw new Error('Resource not found');
+  }
+  
+  // Check permissions - admin can only delete their own resources
+  if (userRole === 'admin' && resource.userId !== userId) {
+    throw new Error('You can only delete your own resources');
+  }
+  
+  return prisma.resource.delete({ where: { id } });
+};
+
+// Bulk operations - superAdmin only
+export const bulkCreateResources = async (resources: any[]) => {
+  return prisma.$transaction(
+    resources.map(resource => 
+      prisma.resource.create({ data: resource })
+    )
+  );
+};
+
+export const bulkUpdateResources = async (resources: any[]) => {
+  return prisma.$transaction(
+    resources.map(resource => 
+      prisma.resource.update({
+        where: { id: resource.id },
+        data: resource
+      })
+    )
+  );
+};
+
+export const bulkDeleteResources = async (ids: number[]) => {
+  return prisma.resource.deleteMany({
+    where: { id: { in: ids } }
   });
-  return result.count;
 };
 
 

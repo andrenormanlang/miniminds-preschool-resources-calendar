@@ -13,8 +13,8 @@ model User {
   email           String    @unique
   firstName       String?
   lastName        String?
-  role            String    @default("user")  // "user", "admin", etc.
-  isApproved      Boolean   @default(false)   // Approval status
+  role            String    @default("user")  // "user", "admin", "superAdmin"
+  isApproved      Boolean   @default(false)   // Approval status for the user account
   resources       Resource[] // Relation to resources created by this user
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -30,6 +30,7 @@ model Resource {
   imageUrl    String?  
   description String?  
   eventDate   DateTime 
+  isApproved  Boolean  @default(false)  // New field for resource approval status
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

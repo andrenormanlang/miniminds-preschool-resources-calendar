@@ -1,59 +1,80 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
-    Box, Heading, Table, Thead, Tbody, Tr, Th, Td, 
-    Button, Select, useToast, Text
-  } from '@chakra-ui/react';
-import { useUser } from '@clerk/clerk-react'; // Import useUser instead of useAuth
-import Loading from '../components/Loading';
+  Box,
+  Heading,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Button,
+  Badge,
+  useToast,
+  Text,
+  useDisclosure,
+  Flex,
+  Icon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+} from "@chakra-ui/react";
+import { useUser } from "@clerk/clerk-react";
+import Loading from "../components/Loading";
+import { Resource } from "../types/type";
+import EventForm from "../components/EventForm";
+import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
+import ModalCard from "../components/ModalCard";
+import { useAuthFetch } from '../utils/authUtils';
 
-type User = {
-  id: number;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  role: string;
-  isApproved: boolean;
+
+type FormData = {
+  title: string;
+  type: string;
+  subject: string;
+  ageGroup: string;
+  rating: number;
+  description: string;
+  eventDate: string;
+  imageUrl: string;
 };
 
 const AdminPage = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [userResources, setUserResources] = useState<Resource[]>([]);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(
+    null
+  );
+  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  const { user, isSignedIn } = useUser(); // Use the useUser hook from Clerk
+  const { user, isSignedIn } = useUser();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { authFetch } = useAuthFetch();
+
 
   useEffect(() => {
     if (isSignedIn) {
-      fetchUsers();
+      fetchUserResources();
     }
   }, [isSignedIn]);
 
-  const fetchUsers = async () => {
+  // For example, in AdminPage.tsx
+  // Replace your existing fetchUserResources with this:
+  const fetchUserResources = async () => {
     try {
-      const token = await getToken();
-      if (!token) {
-        throw new Error("Failed to get authentication token");
-      }
-      
-      const response = await fetch('http://localhost:4000/api/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-      
-      const data = await response.json();
-      setUsers(data);
+      const data = await authFetch("http://localhost:4000/api/resources/admin/mine");
+      setUserResources(data);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch resources:", error);
       toast({
-        title: "Error fetching users",
+        title: "Error fetching resources",
         description: error instanceof Error ? error.message : "Unknown error",
         status: "error",
         duration: 5000,
-        isClosable: true,
       });
     } finally {
       setLoading(false);
@@ -70,37 +91,43 @@ const AdminPage = () => {
     }
   };
 
-  const handleApproveUser = async (id: number) => {
+  const handleAddResource = () => {
+    setIsEditMode(false);
+    setSelectedResource(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEditResource = (resource: Resource) => {
+    setIsEditMode(true);
+    setSelectedResource(resource);
+    setIsFormOpen(true);
+  };
+
+  const handleViewResource = (resource: Resource) => {
+    setSelectedResource(resource);
+    onOpen();
+  };
+
+  const handleDeleteResource = async (resourceId: number) => {
     try {
-      const token = await getToken();
-      if (!token) {
-        throw new Error("Authentication token not available");
-      }
-      
-      const response = await fetch(`http://localhost:4000/api/users/${id}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      await authFetch(`http://localhost:4000/api/resources/${resourceId}`, {
+        method: "DELETE"
       });
       
-      if (!response.ok) {
-        throw new Error("Failed to approve user");
-      }
-      
-      setUsers(users.map(user => 
-        user.id === id ? { ...user, isApproved: true } : user
-      ));
+      // Remove resource from the list
+      setUserResources(userResources.filter((r) => r.id !== resourceId));
       
       toast({
-        title: "User approved.",
+        title: "Resource deleted",
         status: "success",
         duration: 3000,
       });
+      
+      onClose(); // Close modal if open
     } catch (error) {
       console.error(error);
       toast({
-        title: "Failed to approve user.",
+        title: "Failed to delete resource",
         description: error instanceof Error ? error.message : "Unknown error",
         status: "error",
         duration: 3000,
@@ -108,42 +135,78 @@ const AdminPage = () => {
     }
   };
 
-  const handleRoleChange = async (id: number, newRole: string) => {
+  const handleFormSubmit = async (data: FormData) => {
     try {
       const token = await getToken();
       if (!token) {
-        throw new Error("Authentication token not available");
+        throw new Error("Authentication token required");
       }
-      
-      const response = await fetch(`http://localhost:4000/api/users/${id}/role`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ role: newRole })
-      });
-      
+
+      let response;
+
+      if (isEditMode && selectedResource) {
+        // Update existing resource
+        response = await fetch(
+          `http://localhost:4000/api/resources/${selectedResource.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+          }
+        );
+      } else {
+        // Create new resource
+        response = await fetch("http://localhost:4000/api/resources", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        });
+      }
+
       if (!response.ok) {
-        throw new Error("Failed to update role");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to save resource");
       }
-      
-      setUsers(users.map(user => 
-        user.id === id ? { ...user, role: newRole } : user
-      ));
-      
-      toast({
-        title: "Role updated.",
-        status: "success",
-        duration: 3000,
-      });
+
+      const updatedResource = await response.json();
+
+      if (isEditMode) {
+        setUserResources((resources) =>
+          resources.map((r) =>
+            r.id === updatedResource.id ? updatedResource : r
+          )
+        );
+        toast({
+          title: "Resource updated",
+          description: "Your changes have been saved",
+          status: "success",
+          duration: 3000,
+        });
+      } else {
+        setUserResources((resources) => [...resources, updatedResource]);
+        toast({
+          title: "Resource created",
+          description: isEditMode ? "" : "Your resource is pending approval",
+          status: "success",
+          duration: 3000,
+        });
+      }
+
+      setIsFormOpen(false);
+      fetchUserResources(); // Refresh the list
     } catch (error) {
       console.error(error);
       toast({
-        title: "Failed to update role.",
+        title: "Error saving resource",
         description: error instanceof Error ? error.message : "Unknown error",
         status: "error",
-        duration: 3000,
+        duration: 5000,
       });
     }
   };
@@ -154,55 +217,128 @@ const AdminPage = () => {
 
   return (
     <Box p={8}>
-      <Heading mb={6}>User Management</Heading>
-      
-      {users.length > 0 ? (
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Email</Th>
-              <Th>Name</Th>
-              <Th>Role</Th>
-              <Th>Status</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {users.map(user => (
-              <Tr key={user.id}>
-                <Td>{user.email}</Td>
-                <Td>{`${user.firstName || ''} ${user.lastName || ''}`}</Td>
-                <Td>
-                  <Select 
-                    value={user.role} 
-                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                  >
-                    <option value="user">User</option>
-                    <option value="editor">Editor</option>
-                    <option value="admin">Admin</option>
-                  </Select>
-                </Td>
-                <Td>{user.isApproved ? 'Approved' : 'Pending'}</Td>
-                <Td>
-                  {!user.isApproved && (
-                    <Button 
-                      colorScheme="green" 
-                      size="sm"
-                      onClick={() => handleApproveUser(user.id)}
-                    >
-                      Approve
-                    </Button>
-                  )}
-                </Td>
+      <Heading mb={6} color="blue.700">
+        Admin Dashboard
+      </Heading>
+
+      <Flex justifyContent="space-between" alignItems="center" mb={6}>
+        <Heading size="md">Your Resources</Heading>
+        <Button
+          leftIcon={<Icon as={FaPlus} />}
+          colorScheme="blue"
+          onClick={handleAddResource}
+        >
+          Add New Resource
+        </Button>
+      </Flex>
+
+      {userResources.length > 0 ? (
+        <Box overflowX="auto">
+          <Table variant="simple" colorScheme="blue">
+            <Thead bg="blue.50">
+              <Tr>
+                <Th>Title</Th>
+                <Th>Subject</Th>
+                <Th>Age Group</Th>
+                <Th>Date</Th>
+                <Th>Status</Th>
+                <Th>Actions</Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+              {userResources.map((resource) => (
+                <Tr key={resource.id}>
+                  <Td fontWeight="medium">{resource.title}</Td>
+                  <Td>{resource.subject}</Td>
+                  <Td>{resource.ageGroup}</Td>
+                  <Td>{new Date(resource.eventDate).toLocaleDateString()}</Td>
+                  <Td>
+                    <Badge
+                      colorScheme={resource.isApproved ? "green" : "yellow"}
+                      px={2}
+                      py={1}
+                      borderRadius="md"
+                    >
+                      {resource.isApproved ? "Approved" : "Pending"}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    <Flex gap={2}>
+                      <Button
+                        size="sm"
+                        colorScheme="teal"
+                        leftIcon={<Icon as={FaEye} />}
+                        onClick={() => handleViewResource(resource)}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        leftIcon={<Icon as={FaEdit} />}
+                        onClick={() => handleEditResource(resource)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        colorScheme="red"
+                        leftIcon={<Icon as={FaTrash} />}
+                        onClick={() => handleDeleteResource(resource.id)}
+                      >
+                        Delete
+                      </Button>
+                    </Flex>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
       ) : (
         <Box textAlign="center" p={6} bg="gray.50" borderRadius="md">
-          <Heading size="md" mb={4}>No users found</Heading>
-          <Text>There are currently no users in the system.</Text>
+          <Text fontSize="lg" mb={4}>
+            You haven't created any resources yet
+          </Text>
+          <Button colorScheme="blue" onClick={handleAddResource}>
+            Create Your First Resource
+          </Button>
         </Box>
+      )}
+
+      {/* Resource Form Modal */}
+      {isFormOpen && (
+        <Modal
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          size="lg"
+          isCentered
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              {isEditMode ? "Edit Resource" : "Create New Resource"}
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <EventForm
+                resource={selectedResource || undefined}
+                onSubmit={handleFormSubmit}
+              />
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* View Resource Modal */}
+      {selectedResource && (
+        <ModalCard
+          resource={selectedResource}
+          isOpen={isOpen}
+          onClose={onClose}
+          onEdit={() => handleEditResource(selectedResource)}
+          onDelete={() => handleDeleteResource(selectedResource.id)}
+        />
       )}
     </Box>
   );
