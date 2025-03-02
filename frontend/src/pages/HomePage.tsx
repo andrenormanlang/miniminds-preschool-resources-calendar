@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useUser } from "@clerk/clerk-react";
 import {
   Box,
@@ -20,6 +20,7 @@ import {
   Flex,
   useToast,
   Spinner,
+  IconButton,
 } from "@chakra-ui/react";
 import ModalCard from "../components/ModalCard";
 import EventForm from "../components/EventForm";
@@ -27,17 +28,20 @@ import { Resource } from "../types/type";
 import Loading from "../components/Loading";
 import { useAuthFetch } from "../utils/authUtils";
 import { useLocation, useNavigate } from "react-router-dom";
+import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 
 // Function to get a random color for the cards
 const getRandomColor = () => {
   const colors = [
-    "orange.200",
-    "pink.200",
-    "cyan.200",
-    "purple.200",
-    "blue.200",
-    "yellow.200",
-    "green.200",
+    "blue.50",
+    "teal.50",
+    "green.50",
+    "purple.50",
+    "pink.50",
+    "orange.50",
+    "yellow.50",
+    "cyan.50",
+    "red.50",
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
@@ -51,6 +55,16 @@ type FormData = {
   description: string;
   eventDate: string;
   imageUrl: string;
+};
+
+// Add a date formatting function
+const formatCardDate = (dateString: string) => {
+  const date = new Date(dateString);
+  // Format as "29 April" (day and month name)
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+  });
 };
 
 const HomePage = () => {
@@ -75,6 +89,11 @@ const HomePage = () => {
   const params = new URLSearchParams(location.search);
   const shouldAddResource = params.get("addResource") === "true";
 
+  // Add state for resource colors
+  const [resourceColors, setResourceColors] = useState<Record<number, string>>(
+    {}
+  );
+
   // Effect to open the form when the URL parameter is present
   useEffect(() => {
     if (shouldAddResource && canAddResource()) {
@@ -88,19 +107,36 @@ const HomePage = () => {
   useEffect(() => {
     const getResources = async () => {
       try {
+        // Fetch resources from API
         const response = await fetch("http://localhost:4000/api/resources");
         if (!response.ok) {
-          throw new Error("Failed to fetch resources");
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
         const data = await response.json();
-        setResources(data);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unexpected error occurred");
-        }
-      } finally {
+
+        // Explicitly sort resources by date in ascending order
+        const sortedResources = [...data].sort((a, b) => {
+          // Parse dates and compare timestamp values
+          const dateA = new Date(a.eventDate).getTime();
+          const dateB = new Date(b.eventDate).getTime();
+          return dateA - dateB;
+        });
+
+        console.log(
+          "Resources sorted by date:",
+          sortedResources.map((r) => ({
+            title: r.title,
+            date: r.eventDate,
+            formattedDate: formatCardDate(r.eventDate),
+          }))
+        );
+
+        setResources(sortedResources);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching resources:", error);
+        setError("Failed to load resources");
         setLoading(false);
       }
     };
@@ -128,6 +164,25 @@ const HomePage = () => {
 
     getCurrentUserInfo();
   }, [isSignedIn, authFetch]);
+
+  // Generate stable random colors for resources
+  useEffect(() => {
+    if (resources.length > 0) {
+      const newColors: Record<number, string> = {};
+
+      resources.forEach((resource) => {
+        // Only generate a color if one doesn't exist yet
+        if (!resourceColors[resource.id]) {
+          newColors[resource.id] = getRandomColor();
+        }
+      });
+
+      // Update resource colors if we have new ones
+      if (Object.keys(newColors).length > 0) {
+        setResourceColors((prevColors) => ({ ...prevColors, ...newColors }));
+      }
+    }
+  }, [resources]);
 
   const handleAddEvent = () => {
     setSelectedResource(undefined);
@@ -351,74 +406,126 @@ const HomePage = () => {
             </Text>
           </Box>
         ) : resources.length > 0 ? (
-          <SimpleGrid columns={[1, null, 2, 3]} spacing={10} px={[2, 4, 6]}>
-            {resources.map((resource) => (
-              <Box
-                key={resource.id}
-                position="relative"
-                borderRadius="lg"
-                overflow="hidden"
-                bg={getRandomColor()}
-                boxShadow="lg"
-                onClick={() => handleCardClick(resource)}
-                cursor="pointer"
-                transition="transform 0.2s"
-                _hover={{ transform: "scale(1.05)" }}
-                height="100%"
-                display="flex"
-                flexDirection="column"
-              >
-                {/* Date Badge */}
-                <Badge
-                  fontFamily={"AbeeZee"}
-                  fontWeight={"700"}
-                  position="absolute"
-                  top="8px"
-                  right="8px"
-                  backgroundColor="rgba(0,0,0,0.8)"
-                  color="white"
-                  p={1}
-                  borderRadius="md"
+          <SimpleGrid
+            columns={[1, 2, 3, 4]}
+            spacing={6}
+            mt={8}
+            sx={{
+              gridAutoFlow: "row",
+              display: "grid",
+              gridTemplateColumns: {
+                base: "repeat(1, 1fr)",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+                lg: "repeat(4, 1fr)",
+              },
+            }}
+          >
+            {resources.map((resource) => {
+              return (
+                <Box
+                  key={resource.id}
+                  onClick={() => handleCardClick(resource)}
+                  cursor="pointer"
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  overflow="hidden"
+                  boxShadow="md"
+                  position="relative"
+                  bg={resourceColors[resource.id] || "white"} // Use the precomputed color or default to white
+                  transition="transform 0.3s, box-shadow 0.3s"
+                  _hover={{
+                    transform: "translateY(-5px)",
+                    boxShadow: "xl",
+                  }}
                 >
-                  {new Date(resource.eventDate).toLocaleDateString("sv-SE")}
-                </Badge>
+                  {/* Badge for approval status */}
+                  {renderApprovalStatus(resource)}
 
-                {/* Image */}
-                <Image
-                  src={
-                    resource.imageUrl ||
-                    "https://via.placeholder.com/300x200?text=No+Image"
-                  }
-                  alt={resource.title}
-                  h="180px"
-                  w="100%"
-                  objectFit="cover"
-                />
-
-                {/* Content */}
-                <Box p={4} flex="1" display="flex" flexDirection="column">
-                  <Heading size="md" mb={2} noOfLines={2}>
-                    {resource.title}
-                  </Heading>
-
-                  <Text fontSize="sm" color="gray.600" mb={2} noOfLines={3}>
-                    {resource.description}
+                  {/* Date badge - top right */}
+                  <Text
+                    position="absolute"
+                    top={2}
+                    right={2}
+                    bg="blue.500"
+                    color="white"
+                    px={2}
+                    py={1}
+                    borderRadius="md"
+                    fontSize="sm"
+                    fontWeight="bold"
+                    zIndex={1}
+                  >
+                    {formatCardDate(resource.eventDate)}
                   </Text>
 
-                  <Flex mt="auto" wrap="wrap" gap={1}>
-                    <Tag size="sm" colorScheme="purple">
-                      {resource.type}
-                    </Tag>
-                    <Tag size="sm" colorScheme="blue">
-                      {resource.subject}
-                    </Tag>
-                    <Tag size="sm" colorScheme="green">
-                      {resource.ageGroup}
-                    </Tag>
-                  </Flex>
+                  {/* Image */}
+                  <Image
+                    src={
+                      resource.imageUrl || "https://via.placeholder.com/300x200"
+                    }
+                    alt={resource.title}
+                    height="200px"
+                    width="100%"
+                    objectFit="cover"
+                  />
+
+                  {/* Card content - this part keeps the random background color */}
+                  <Box p={4}>
+                    <Text
+                      fontWeight="semibold"
+                      fontSize="xl"
+                      mb={2}
+                      noOfLines={1}
+                    >
+                      {resource.title}
+                    </Text>
+
+                    <Flex mb={3} wrap="wrap" gap={2}>
+                      <Badge colorScheme="blue">{resource.type}</Badge>
+                      <Badge colorScheme="green">{resource.subject}</Badge>
+                      <Badge colorScheme="purple">{resource.ageGroup}</Badge>
+                    </Flex>
+
+                    <Text noOfLines={3} color="gray.600" mb={3}>
+                      {resource.description}
+                    </Text>
+
+                    {/* Action buttons */}
+                    <Flex mt={4} justify="flex-end">
+                      {canEditResource(resource) && (
+                        <IconButton
+                          icon={<EditIcon />}
+                          aria-label="Edit"
+                          mr={2}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditEvent(resource);
+                          }}
+                          colorScheme="blue"
+                          variant="ghost"
+                          size="sm"
+                        />
+                      )}
+
+                      {canDeleteResource(resource) && (
+                        <IconButton
+                          icon={<DeleteIcon />}
+                          aria-label="Delete"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEvent(resource.id);
+                          }}
+                          colorScheme="red"
+                          variant="ghost"
+                          size="sm"
+                        />
+                      )}
+                    </Flex>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              );
+            })}
           </SimpleGrid>
         ) : (
           <Box textAlign="center" py={10}>

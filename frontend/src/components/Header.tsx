@@ -44,21 +44,11 @@ const Header = () => {
             "http://localhost:4000/api/users/current"
           );
           setUserRole(userData.role);
-
-          // Console log for debugging
-          console.log("=========== USER INFO ===========");
-          console.log("User authenticated:", isSignedIn);
-          console.log("User ID:", user?.id);
-          console.log("User role:", userData.role);
-          console.log("User email:", user?.primaryEmailAddress?.emailAddress);
-          console.log("User is approved:", userData.isApproved);
-          console.log("================================");
         } catch (error) {
           console.error("Failed to get user role:", error);
         }
       } else {
         setUserRole(null);
-        console.log("No user is currently signed in");
       }
     };
 
