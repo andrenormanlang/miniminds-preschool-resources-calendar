@@ -1,36 +1,53 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import {
   getAllResources,
+  getAllResourcesAdmin,
+  getPendingResources,
+  getUserResources,
   getResourceById,
   createResource,
   updateResource,
+  approveResource,
   deleteResource,
   bulkCreateResources,
   bulkUpdateResources,
   bulkDeleteResources,
 } from '../controllers/resourceController.js';
+import { isSuperAdmin, isAdminOrSuperAdmin, requireAuth } from '../middlewares/auth.js';
 import multer from 'multer';
 import { storage } from '../utils/cloudinary.js';
 
 const router = Router();
 
-router.get('/', getAllResources);
-router.get('/:id', getResourceById);
-router.post('/', createResource);
-router.put('/:id', updateResource);
-router.delete('/:id', deleteResource);
+// Public routes
+router.get('/', getAllResources); // View approved resources (public)
+router.get('/:id', getResourceById); // Get single resource details
 
-// Bulk operations
-router.post('/bulk', bulkCreateResources);
-router.post('/bulk-update', bulkUpdateResources);
-router.delete('/', bulkDeleteResources);
+// Admin/SuperAdmin routes
+router.post('/', isAdminOrSuperAdmin, createResource); // Create resource (admin/superAdmin)
+router.get('/admin/all', isAdminOrSuperAdmin, getAllResourcesAdmin); // See all resources as admin/superAdmin
+router.get('/admin/mine', isAdminOrSuperAdmin, getUserResources); // See your own resources
 
+// SuperAdmin only routes
+router.get('/admin/pending', isSuperAdmin, getPendingResources); // See pending resources (superAdmin)
+router.patch('/:id/approve', isSuperAdmin, approveResource); // Approve/reject resource (superAdmin)
+
+// Update/delete routes (auth check is in the controller)
+router.put('/:id', isAdminOrSuperAdmin, updateResource);
+router.delete('/:id', isAdminOrSuperAdmin, deleteResource);
+
+// Bulk operations (SuperAdmin only)
+router.post('/bulk', isSuperAdmin, bulkCreateResources);
+router.post('/bulk-update', isSuperAdmin, bulkUpdateResources);
+router.delete('/', isSuperAdmin, bulkDeleteResources);
+
+// Image upload (admin/superAdmin)
 const upload = multer({ storage });
-
 router.post(
   '/upload',
+  isAdminOrSuperAdmin,
   upload.single('image'),
-  async (req: Request, res: Response) => {
+  async (req, res) => {
     if (req.file && req.file.path) {
       res.json({ imageUrl: req.file.path });
     } else {
@@ -40,4 +57,3 @@ router.post(
 );
 
 export default router;
-

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { ChakraProvider } from "@chakra-ui/react";
 import App from "./App";
 import { ClerkProvider } from "@clerk/clerk-react";
+import { ResourceApprovalProvider } from "./contexts/ResourceApprovalContext";
 
 // Import your Publishable Key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -15,7 +16,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ChakraProvider>
       <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-        <App />
+        <ResourceApprovalProvider>
+          <App />
+        </ResourceApprovalProvider>
       </ClerkProvider>
     </ChakraProvider>
   </StrictMode>
