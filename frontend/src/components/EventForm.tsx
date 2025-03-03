@@ -1,6 +1,6 @@
 // src/components/EventForm.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -8,24 +8,16 @@ import {
   Textarea,
   FormControl,
   FormLabel,
-  NumberInput,
-  NumberInputField,
   Stack,
   Image,
   Spinner,
   Text,
   useToast,
   Select,
-  FormErrorMessage,
-  VStack,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
-  Flex
-} from '@chakra-ui/react';
-import { Resource } from '../types/type';
-import { useDropzone } from 'react-dropzone';
-import { useAuthFetch } from '../utils/authUtils';
+} from "@chakra-ui/react";
+import { Resource } from "../types/type";
+import { useDropzone } from "react-dropzone";
+import { useAuthFetch } from "../utils/authUtils";
 
 type FormData = {
   title: string;
@@ -37,70 +29,64 @@ type FormData = {
   imageUrl: string;
 };
 
-type EventFormProps = {
+interface EventFormProps {
   resource?: Resource;
-  onSubmit: (data: FormData) => void;
-};
+  onSubmit: (data: globalThis.FormData) => void;
+}
 
 const ageGroupOptions = [
-  { value: '1-2 years', label: '1-2 years (Toddlers)' },
-  { value: '2-3 years', label: '2-3 years (Early Preschool)' },
-  { value: '3-4 years', label: '3-4 years (Preschool)' },
-  { value: '4-5 years', label: '4-5 years (Pre-Kindergarten)' },
-  { value: '5-6 years', label: '5-6 years (Kindergarten)' }
+  { value: "1-2 years", label: "1-2 years (Toddlers)" },
+  { value: "2-3 years", label: "2-3 years (Early Preschool)" },
+  { value: "3-4 years", label: "3-4 years (Preschool)" },
+  { value: "4-5 years", label: "4-5 years (Pre-Kindergarten)" },
+  { value: "5-6 years", label: "5-6 years (Kindergarten)" },
 ];
 
 const subjectOptions = [
-  { value: 'Literacy', label: 'Literacy & Language' },
-  { value: 'Numeracy', label: 'Numeracy & Math' },
-  { value: 'Science', label: 'Science & Discovery' },
-  { value: 'Arts', label: 'Arts & Crafts' },
-  { value: 'Music', label: 'Music & Movement' },
-  { value: 'SocialEmotional', label: 'Social-Emotional Learning' },
-  { value: 'PhysicalDevelopment', label: 'Physical Development' },
-  { value: 'SensoryPlay', label: 'Sensory Play' },
-  { value: 'ProblemSolving', label: 'Critical Thinking & Problem Solving' },
-  { value: 'WorldCultures', label: 'World Cultures & Diversity' },
-  { value: 'NatureOutdoors', label: 'Nature & Outdoor Learning' },
-  { value: 'PlayfulLearning', label: 'Playful Learning' },
-  { value: 'Other', label: 'Other' }
+  { value: "Literacy", label: "Literacy & Language" },
+  { value: "Numeracy", label: "Numeracy & Math" },
+  { value: "Science", label: "Science & Discovery" },
+  { value: "Arts", label: "Arts & Crafts" },
+  { value: "Music", label: "Music & Movement" },
+  { value: "SocialEmotional", label: "Social-Emotional Learning" },
+  { value: "PhysicalDevelopment", label: "Physical Development" },
+  { value: "SensoryPlay", label: "Sensory Play" },
+  { value: "ProblemSolving", label: "Critical Thinking & Problem Solving" },
+  { value: "WorldCultures", label: "World Cultures & Diversity" },
+  { value: "NatureOutdoors", label: "Nature & Outdoor Learning" },
+  { value: "PlayfulLearning", label: "Playful Learning" },
+  { value: "Other", label: "Other" },
 ];
 
 const typeOptions = [
-  { value: 'Activity', label: 'Activity' },
-  { value: 'Printable', label: 'Printable Worksheet' },
-  { value: 'Game', label: 'Game' },
-  { value: 'Book', label: 'Book Recommendation' },
-  { value: 'Song', label: 'Song or Rhyme' },
-  { value: 'Craft', label: 'Craft Project' },
-  { value: 'Experiment', label: 'Science Experiment' },
-  { value: 'OutdoorActivity', label: 'Outdoor Activity' },
-  { value: 'DigitalResource', label: 'Digital Resource' },
-  { value: 'LessonPlan', label: 'Lesson Plan' },
-  { value: 'VideoLink', label: 'Video Link' },
-  { value: 'ParentTip', label: 'Parent Tip' },
-  { value: 'Other', label: 'Other' }
-];
-
-const ratingOptions = [
-  { value: 5, label: '⭐⭐⭐⭐⭐ (5) - Outstanding' },
-  { value: 4, label: '⭐⭐⭐⭐ (4) - Very Good' },
-  { value: 3, label: '⭐⭐⭐ (3) - Good' },
-  { value: 2, label: '⭐⭐ (2) - Fair' },
-  { value: 1, label: '⭐ (1) - Needs Improvement' }
+  { value: "Activity", label: "Activity" },
+  { value: "Printable", label: "Printable Worksheet" },
+  { value: "Game", label: "Game" },
+  { value: "Book", label: "Book Recommendation" },
+  { value: "Song", label: "Song or Rhyme" },
+  { value: "Craft", label: "Craft Project" },
+  { value: "Experiment", label: "Science Experiment" },
+  { value: "OutdoorActivity", label: "Outdoor Activity" },
+  { value: "DigitalResource", label: "Digital Resource" },
+  { value: "LessonPlan", label: "Lesson Plan" },
+  { value: "VideoLink", label: "Video Link" },
+  { value: "ParentTip", label: "Parent Tip" },
+  { value: "Other", label: "Other" },
 ];
 
 const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
-  const { authFetch, getToken } = useAuthFetch();
+  const { getToken } = useAuthFetch();
   const toast = useToast();
   const [formData, setFormData] = useState<FormData>({
-    title: resource?.title || '',
-    type: resource?.type || '',
-    subject: resource?.subject || '',
-    ageGroup: resource?.ageGroup || '',
-    description: resource?.description || '',
-    eventDate: resource?.eventDate ? new Date(resource.eventDate).toISOString().split('T')[0] : '',
-    imageUrl: resource?.imageUrl || '',
+    title: resource?.title || "",
+    type: resource?.type || "",
+    subject: resource?.subject || "",
+    ageGroup: resource?.ageGroup || "",
+    description: resource?.description || "",
+    eventDate: resource?.eventDate
+      ? new Date(resource.eventDate).toISOString().split("T")[0]
+      : "",
+    imageUrl: resource?.imageUrl || "",
   });
 
   const [uploading, setUploading] = useState<boolean>(false);
@@ -108,38 +94,42 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
   const onDrop = async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     const uploadData = new FormData();
-    uploadData.append('image', file);
+    uploadData.append("image", file);
 
     setUploading(true);
 
     try {
       const token = await getToken();
-      
-      const response = await fetch('http://localhost:4000/api/resources/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: uploadData,
-      });
+
+      const response = await fetch(
+        "http://localhost:4000/api/resources/upload",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: uploadData,
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        throw new Error("Failed to upload image");
       }
 
       const data = await response.json();
       setFormData({ ...formData, imageUrl: data.imageUrl });
-      
+
       toast({
         title: "Image uploaded",
         status: "success",
         duration: 3000,
       });
     } catch (err) {
-      console.error('Upload error:', err);
+      console.error("Upload error:", err);
       toast({
         title: "Upload failed",
-        description: err instanceof Error ? err.message : "Failed to upload image",
+        description:
+          err instanceof Error ? err.message : "Failed to upload image",
         status: "error",
         duration: 5000,
       });
@@ -150,26 +140,31 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleNumberChange = (valueAsString: string, valueAsNumber: number) => {
-    setFormData({ ...formData, rating: valueAsNumber });
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Format the date correctly before sending up to parent
-    const formattedData = {
-      ...formData,
-      // Ensure date is in ISO format for API
-      eventDate: new Date(formData.eventDate).toISOString()
-    };
-    
-    onSubmit(formattedData);
+
+    // Create a new FormData object
+    const formDataObj = new FormData();
+
+    // Add all form fields to the FormData object
+    formDataObj.append("title", formData.title);
+    formDataObj.append("type", formData.type);
+    formDataObj.append("subject", formData.subject);
+    formDataObj.append("ageGroup", formData.ageGroup);
+    formDataObj.append("description", formData.description);
+    formDataObj.append("eventDate", new Date(formData.eventDate).toISOString());
+    formDataObj.append("imageUrl", formData.imageUrl);
+
+    onSubmit(formDataObj);
   };
 
   return (
@@ -198,18 +193,19 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
             )}
           </Box>
           {formData.imageUrl && (
-            <Image src={formData.imageUrl} alt="Preview" boxSize="100px" mt={2} />
+            <Image
+              src={formData.imageUrl}
+              alt="Preview"
+              boxSize="100px"
+              mt={2}
+            />
           )}
         </FormControl>
 
         <FormControl isRequired>
           <FormLabel>Type</FormLabel>
-          <Select
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-          >
-            {typeOptions.map(option => (
+          <Select name="type" value={formData.type} onChange={handleChange}>
+            {typeOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -224,7 +220,7 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
             value={formData.subject}
             onChange={handleChange}
           >
-            {subjectOptions.map(option => (
+            {subjectOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -239,7 +235,7 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
             value={formData.ageGroup}
             onChange={handleChange}
           >
-            {ageGroupOptions.map(option => (
+            {ageGroupOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -249,7 +245,11 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
 
         <FormControl isRequired>
           <FormLabel>Description</FormLabel>
-          <Textarea name="description" value={formData.description} onChange={handleChange} />
+          <Textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+          />
         </FormControl>
 
         <FormControl isRequired>
@@ -257,14 +257,14 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
           <Input
             name="eventDate"
             type="date"
-            value={formData.eventDate.toString().split('T')[0]}
+            value={formData.eventDate.toString().split("T")[0]}
             onChange={handleChange}
           />
         </FormControl>
 
-        <Button 
-          type="submit" 
-          bgColor="blue.600" 
+        <Button
+          type="submit"
+          bgColor="blue.600"
           color="white"
           _hover={{ bgColor: "blue.700" }}
         >

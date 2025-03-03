@@ -56,7 +56,7 @@ const UnauthorizedPage = () => {
         {isSignedIn ? (
           <Box mt={4}>
             <Text mb={4}>
-              Your current role ({user.publicMetadata.role || 'user'}) doesn't have the required permissions.
+              Your current role ({(user.publicMetadata as { role?: string }).role || 'user'}) doesn't have the required permissions.
               Please contact an administrator if you need access.
             </Text>
           </Box>

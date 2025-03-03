@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useUser } from "@clerk/clerk-react";
 import {
   Box,
-  Heading,
   Text,
   SimpleGrid,
   Container,
-  Badge,
-  Image,
-  Tag,
-  Button,
-  ButtonGroup,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -18,56 +12,17 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  Flex,
   useToast,
   Spinner,
-  IconButton,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  InputRightElement,
-  Select,
-  HStack,
-  VStack,
-  Grid,
-  GridItem,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverBody,
-  PopoverArrow,
-  PopoverHeader,
-  PopoverCloseButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Icon,
-  Stack,
 } from "@chakra-ui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  EditIcon,
-  DeleteIcon,
-  SearchIcon,
-  ChevronDownIcon,
-  TimeIcon,
-  SunIcon,
-  CalendarIcon,
-} from "@chakra-ui/icons";
-import ModalCard from "../components/ModalCard";
-import EventForm from "../components/EventForm";
+import {  useNavigate } from "react-router-dom";
 import { Resource } from "../types/type";
 import Loading from "../components/Loading";
 import { useResourceApi } from "../services/api";
-import {
-  FaFilter,
-  FaSort,
-  FaBookOpen,
-  FaUsers,
-  FaGraduationCap,
-} from "react-icons/fa";
+import ResourceCard from "../components/ResourceCard";
+import ResourceFilters from "../components/ResourceFilters";
+import ModalCard from "../components/ModalCard";
 
 // Function to get a random color for the cards
 const getRandomColor = () => {
@@ -85,54 +40,29 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-type FormData = {
-  title: string;
-  type: string;
-  subject: string;
-  ageGroup: string;
-  rating: number;
-  description: string;
-  eventDate: string;
-  imageUrl: string;
-};
-
-// Add a date formatting function
-const formatCardDate = (dateString: string) => {
-  const date = new Date(dateString);
-  // Format as "29 April" (day and month name)
-  return date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-  });
-};
-
-const HomePage = () => {
-  const { user, isSignedIn } = useUser();
+const HomePage: React.FC = () => {
+  const { isSignedIn } = useUser();
   const [selectedResource, setSelectedResource] = useState<
     Resource | undefined
   >();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const toast = useToast();
-  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const resourceApi = useResourceApi();
   const [resourceColors, setResourceColors] = useState<Record<number, string>>(
     {}
   );
-  const [searchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
 
-  // Only show filter options for admin/superAdmin
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  // Updated Queries
+  // Queries
   const { data: allResources = [], isLoading: isLoadingAllResources } =
     useQuery({
       queryKey: ["resources", "all"],
@@ -146,21 +76,19 @@ const HomePage = () => {
   });
 
   // Filter resources based on approval status for regular users
-  const resources = React.useMemo(() => {
+  const resources = useMemo(() => {
     let resourceList = [...allResources];
-
-    // For regular users, only show approved resources
     if (currentUser?.role === "user") {
       resourceList = resourceList.filter((resource) => resource.isApproved);
     }
-
-    return resourceList.sort((a, b) => {
-      return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
-    });
+    return resourceList.sort(
+      (a, b) =>
+        new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+    );
   }, [allResources, currentUser]);
 
   // Enhanced resources filtering and sorting
-  const filteredAndSortedResources = React.useMemo(() => {
+  const filteredAndSortedResources = useMemo(() => {
     let filtered = [...resources];
 
     // Apply search filter
@@ -215,7 +143,6 @@ const HomePage = () => {
       }
     }
 
-    // Sort by date ascending by default
     return filtered.sort(
       (a, b) =>
         new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
@@ -228,11 +155,11 @@ const HomePage = () => {
     selectedAgeGroup,
     startDate,
     endDate,
-    currentUser,
+    currentUser?.role,
   ]);
 
   // Get unique values for filters
-  const filterOptions = React.useMemo(() => {
+  const filterOptions = useMemo(() => {
     const types = new Set<string>();
     const subjects = new Set<string>();
     const ageGroups = new Set<string>();
@@ -251,49 +178,6 @@ const HomePage = () => {
   }, [resources]);
 
   // Mutations
-  const createResourceMutation = useMutation({
-    mutationFn: resourceApi.createResource,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["resources"] });
-      toast({
-        title: "Resource created",
-        status: "success",
-        duration: 3000,
-      });
-      setIsFormOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error creating resource",
-        description: error.message,
-        status: "error",
-        duration: 5000,
-      });
-    },
-  });
-
-  const updateResourceMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Resource> }) =>
-      resourceApi.updateResource(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["resources"] });
-      toast({
-        title: "Resource updated",
-        status: "success",
-        duration: 3000,
-      });
-      setIsFormOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error updating resource",
-        description: error.message,
-        status: "error",
-        duration: 5000,
-      });
-    },
-  });
-
   const deleteResourceMutation = useMutation({
     mutationFn: resourceApi.deleteResource,
     onSuccess: () => {
@@ -317,58 +201,20 @@ const HomePage = () => {
 
   // Effect to handle resource colors
   useEffect(() => {
-    if (resources.length > 0) {
-      const newColors: Record<number, string> = {};
-      resources.forEach((resource) => {
-        if (!resourceColors[resource.id]) {
-          newColors[resource.id] = getRandomColor();
-        }
-      });
-      if (Object.keys(newColors).length > 0) {
-        setResourceColors((prev) => ({ ...prev, ...newColors }));
+    const newColors: Record<number, string> = {};
+    resources.forEach((resource) => {
+      if (!resourceColors[resource.id]) {
+        newColors[resource.id] = getRandomColor();
       }
+    });
+    if (Object.keys(newColors).length > 0) {
+      setResourceColors((prev) => ({ ...prev, ...newColors }));
     }
-  }, [resources]);
-
-  // Effect to handle add resource from URL
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get("addResource") === "true" && canAddResource()) {
-      handleAddEvent();
-      navigate("/", { replace: true });
-    }
-  }, [location.search]);
-
-  const handleAddEvent = () => {
-    setSelectedResource(undefined);
-    setIsEditMode(false);
-    setIsFormOpen(true);
-  };
-
-  const handleEditEvent = (resource: Resource) => {
-    setSelectedResource(resource);
-    setIsEditMode(true);
-    setIsFormOpen(true);
-    onClose();
-  };
+  }, [resources, resourceColors]);
 
   const handleCardClick = (resource: Resource) => {
     setSelectedResource(resource);
     onOpen();
-  };
-
-  const handleFormSubmit = async (data: Omit<Resource, "id">) => {
-    const isoFormattedDate = new Date(data.eventDate).toISOString();
-    const payload = { ...data, eventDate: isoFormattedDate };
-
-    if (isEditMode && selectedResource) {
-      updateResourceMutation.mutate({
-        id: selectedResource.id,
-        data: payload,
-      });
-    } else {
-      createResourceMutation.mutate(payload);
-    }
   };
 
   const handleDeleteEvent = (id: number) => {
@@ -385,11 +231,6 @@ const HomePage = () => {
   };
 
   // Permission checks
-  const canAddResource = () => {
-    if (!currentUser) return false;
-    return currentUser.role === "admin" || currentUser.role === "superAdmin";
-  };
-
   const canEditResource = (resource: Resource) => {
     if (!isSignedIn || !currentUser?.role) return false;
     if (currentUser.role === "superAdmin") return true;
@@ -400,23 +241,6 @@ const HomePage = () => {
   };
 
   const canDeleteResource = canEditResource;
-
-  const renderApprovalStatus = (resource: Resource) => {
-    if (!isSignedIn || !currentUser) return null;
-    if (!currentUser.role || currentUser.role === "user") return null;
-
-    return (
-      <Badge
-        position="absolute"
-        top="8px"
-        left="8px"
-        colorScheme={resource.isApproved ? "green" : "yellow"}
-        zIndex="1"
-      >
-        {resource.isApproved ? "Approved" : "Pending"}
-      </Badge>
-    );
-  };
 
   if (isLoadingAllResources) return <Loading />;
 
@@ -440,266 +264,23 @@ const HomePage = () => {
       p={8}
     >
       <Container maxW="1300px" centerContent>
-        {/* Search and Filters Section - Show for all users */}
-        <Grid
-          templateColumns={{
-            base: "1fr",
-            md: "repeat(2, 1fr)",
-            lg: "repeat(3, 1fr)",
-          }}
-          gap={4}
-          w="100%"
-          mb={8}
-          p={4}
-          bg="whiteAlpha.200"
-          borderRadius="xl"
-          backdropFilter="blur(10px)"
-          position="relative"
-          zIndex="10"
-          boxShadow="xl"
-        >
-          {/* Search Bar - Full Width */}
-          <GridItem colSpan={{ base: 1, md: 2, lg: 3 }}>
-            <InputGroup size="lg" position="relative" zIndex="11">
-              <InputLeftElement pointerEvents="none">
-                <SearchIcon color="purple.300" />
-              </InputLeftElement>
-              <Input
-                placeholder="Search resources..."
-                bg="white"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                _focus={{
-                  borderColor: "purple.300",
-                  boxShadow: "0 0 0 1px purple.300",
-                }}
-              />
-            </InputGroup>
-          </GridItem>
+        <ResourceFilters
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          selectedSubject={selectedSubject}
+          setSelectedSubject={setSelectedSubject}
+          selectedAgeGroup={selectedAgeGroup}
+          setSelectedAgeGroup={setSelectedAgeGroup}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          filterOptions={filterOptions}
+          showAllFilters={currentUser?.role !== "user"}
+        />
 
-          {/* Type Filter */}
-          <GridItem position="relative" zIndex="12">
-            <Popover placement="bottom-start" gutter={4}>
-              <PopoverTrigger>
-                <Button
-                  w="100%"
-                  rightIcon={<ChevronDownIcon />}
-                  leftIcon={<Icon as={FaBookOpen} />}
-                  variant="solid"
-                  bg={selectedType !== "all" ? "purple.500" : "white"}
-                  color={selectedType !== "all" ? "white" : "gray.800"}
-                  _hover={{
-                    bg: selectedType !== "all" ? "purple.600" : "gray.100",
-                  }}
-                >
-                  {selectedType === "all" ? "All Types" : selectedType}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent zIndex="1000">
-                <PopoverArrow />
-                <PopoverBody>
-                  <VStack align="stretch" spacing={2}>
-                    <Button
-                      variant="ghost"
-                      justifyContent="flex-start"
-                      isActive={selectedType === "all"}
-                      onClick={() => setSelectedType("all")}
-                    >
-                      All Types
-                    </Button>
-                    {filterOptions.types.map((type) => (
-                      <Button
-                        key={type}
-                        variant="ghost"
-                        justifyContent="flex-start"
-                        isActive={selectedType === type}
-                        onClick={() => setSelectedType(type)}
-                      >
-                        {type}
-                      </Button>
-                    ))}
-                  </VStack>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          </GridItem>
-
-          {/* Subject Filter */}
-          <GridItem position="relative" zIndex="12">
-            <Popover placement="bottom-start" gutter={4}>
-              <PopoverTrigger>
-                <Button
-                  w="100%"
-                  rightIcon={<ChevronDownIcon />}
-                  leftIcon={<Icon as={FaGraduationCap} />}
-                  variant="solid"
-                  bg={selectedSubject !== "all" ? "teal.500" : "white"}
-                  color={selectedSubject !== "all" ? "white" : "gray.800"}
-                  _hover={{
-                    bg: selectedSubject !== "all" ? "teal.600" : "gray.100",
-                  }}
-                >
-                  {selectedSubject === "all" ? "All Subjects" : selectedSubject}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent zIndex="1000">
-                <PopoverArrow />
-                <PopoverBody>
-                  <VStack align="stretch" spacing={2}>
-                    <Button
-                      variant="ghost"
-                      justifyContent="flex-start"
-                      isActive={selectedSubject === "all"}
-                      onClick={() => setSelectedSubject("all")}
-                    >
-                      All Subjects
-                    </Button>
-                    {filterOptions.subjects.map((subject) => (
-                      <Button
-                        key={subject}
-                        variant="ghost"
-                        justifyContent="flex-start"
-                        isActive={selectedSubject === subject}
-                        onClick={() => setSelectedSubject(subject)}
-                      >
-                        {subject}
-                      </Button>
-                    ))}
-                  </VStack>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          </GridItem>
-
-          {/* Age Group Filter */}
-          <GridItem position="relative" zIndex="12">
-            <Popover placement="bottom-start" gutter={4}>
-              <PopoverTrigger>
-                <Button
-                  w="100%"
-                  rightIcon={<ChevronDownIcon />}
-                  leftIcon={<Icon as={FaUsers} />}
-                  variant="solid"
-                  bg={selectedAgeGroup !== "all" ? "orange.500" : "white"}
-                  color={selectedAgeGroup !== "all" ? "white" : "gray.800"}
-                  _hover={{
-                    bg: selectedAgeGroup !== "all" ? "orange.600" : "gray.100",
-                  }}
-                >
-                  {selectedAgeGroup === "all"
-                    ? "All Age Groups"
-                    : selectedAgeGroup}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent zIndex="1000">
-                <PopoverArrow />
-                <PopoverBody>
-                  <VStack align="stretch" spacing={2}>
-                    <Button
-                      variant="ghost"
-                      justifyContent="flex-start"
-                      isActive={selectedAgeGroup === "all"}
-                      onClick={() => setSelectedAgeGroup("all")}
-                    >
-                      All Age Groups
-                    </Button>
-                    {filterOptions.ageGroups.map((ageGroup) => (
-                      <Button
-                        key={ageGroup}
-                        variant="ghost"
-                        justifyContent="flex-start"
-                        isActive={selectedAgeGroup === ageGroup}
-                        onClick={() => setSelectedAgeGroup(ageGroup)}
-                      >
-                        {ageGroup}
-                      </Button>
-                    ))}
-                  </VStack>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          </GridItem>
-
-          {/* Date Range Filter */}
-          <GridItem
-            colSpan={{ base: 1, md: 2, lg: 3 }}
-            position="relative"
-            zIndex="11"
-          >
-            <Popover placement="bottom">
-              <PopoverTrigger>
-                <Button
-                  w="100%"
-                  rightIcon={<ChevronDownIcon />}
-                  leftIcon={<CalendarIcon />}
-                  variant="solid"
-                  bg={startDate || endDate ? "blue.500" : "white"}
-                  color={startDate || endDate ? "white" : "gray.800"}
-                  _hover={{
-                    bg: startDate || endDate ? "blue.600" : "gray.100",
-                  }}
-                >
-                  {startDate || endDate
-                    ? `Date Range: ${
-                        startDate
-                          ? new Date(startDate).toLocaleDateString()
-                          : "Any"
-                      } - ${
-                        endDate ? new Date(endDate).toLocaleDateString() : "Any"
-                      }`
-                    : "Filter by Date Range"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent p={4} w="300px">
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader fontWeight="bold">
-                  Select Date Range
-                </PopoverHeader>
-                <PopoverBody>
-                  <Stack spacing={4}>
-                    <Box>
-                      <Text fontSize="sm" mb={1}>
-                        Start Date
-                      </Text>
-                      <Input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        max={endDate || undefined}
-                      />
-                    </Box>
-                    <Box>
-                      <Text fontSize="sm" mb={1}>
-                        End Date
-                      </Text>
-                      <Input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        min={startDate || undefined}
-                      />
-                    </Box>
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      variant="ghost"
-                      onClick={() => {
-                        setStartDate("");
-                        setEndDate("");
-                      }}
-                      leftIcon={<Icon as={DeleteIcon} />}
-                    >
-                      Clear Dates
-                    </Button>
-                  </Stack>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          </GridItem>
-        </Grid>
-
-        {/* Resource Grid */}
         <Box position="relative" zIndex="1" w="100%">
           {isLoadingAllResources ? (
             <Box textAlign="center" py={10}>
@@ -710,148 +291,23 @@ const HomePage = () => {
             </Box>
           ) : filteredAndSortedResources.length > 0 ? (
             <SimpleGrid
-              columns={[1, 2, 3, 4]}
+              columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
               spacing={6}
               mt={8}
-              sx={{
-                gridAutoFlow: "row",
-                display: "grid",
-                gridTemplateColumns: {
-                  base: "repeat(1, 1fr)",
-                  sm: "repeat(2, 1fr)",
-                  md: "repeat(3, 1fr)",
-                  lg: "repeat(4, 1fr)",
-                },
-              }}
             >
-              {filteredAndSortedResources.map((resource) => {
-                return (
-                  <Box
-                    key={resource.id}
-                    onClick={() => handleCardClick(resource)}
-                    cursor="pointer"
-                    borderWidth="1px"
-                    borderRadius="lg"
-                    overflow="hidden"
-                    boxShadow="md"
-                    position="relative"
-                    bg={resourceColors[resource.id] || "white"} // Use the precomputed color or default to white
-                    transition="transform 0.3s, box-shadow 0.3s"
-                    _hover={{
-                      transform: "translateY(-5px)",
-                      boxShadow: "xl",
-                    }}
-                  >
-                    {/* Badge for approval status */}
-                    {renderApprovalStatus(resource)}
-
-                    {/* Date badge - top right */}
-                    <Text
-                      position="absolute"
-                      top={2}
-                      right={2}
-                      bg="blue.500"
-                      color="white"
-                      px={2}
-                      py={1}
-                      borderRadius="md"
-                      fontSize="sm"
-                      fontWeight="bold"
-                      zIndex={1}
-                    >
-                      {formatCardDate(resource.eventDate)}
-                    </Text>
-
-                    {/* Image */}
-                    <Image
-                      src={
-                        resource.imageUrl ||
-                        "https://via.placeholder.com/300x200"
-                      }
-                      alt={resource.title}
-                      height="200px"
-                      width="100%"
-                      objectFit="cover"
-                    />
-
-                    {/* Card content */}
-                    <Box p={4}>
-                      <Text
-                        fontWeight="semibold"
-                        fontSize="xl"
-                        mb={2}
-                        noOfLines={1}
-                        color="gray.800"
-                      >
-                        {resource.title}
-                      </Text>
-
-                      <Flex mb={3} wrap="wrap" gap={2}>
-                        <Badge colorScheme="blue" variant="solid">
-                          {resource.type}
-                        </Badge>
-                        <Badge colorScheme="green" variant="solid">
-                          {resource.subject}
-                        </Badge>
-                        <Badge colorScheme="purple" variant="solid">
-                          {resource.ageGroup}
-                        </Badge>
-                      </Flex>
-
-                      <Text noOfLines={3} color="gray.700" mb={3}>
-                        {resource.description}
-                      </Text>
-
-                      {/* Action buttons */}
-                      <Flex mt={4} justify="flex-end" gap={2}>
-                        {canEditResource(resource) && (
-                          <IconButton
-                            icon={<EditIcon />}
-                            aria-label="Edit"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditEvent(resource);
-                            }}
-                            colorScheme="blue"
-                            bg="blue.500"
-                            color="white"
-                            size="sm"
-                            _hover={{
-                              bg: "blue.600",
-                              transform: "scale(1.1)",
-                            }}
-                            _active={{
-                              bg: "blue.700",
-                            }}
-                          />
-                        )}
-
-                        {canDeleteResource(resource) && (
-                          <IconButton
-                            icon={<DeleteIcon />}
-                            aria-label="Delete"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteEvent(resource.id);
-                            }}
-                            colorScheme="red"
-                            bg="red.500"
-                            color="white"
-                            size="sm"
-                            _hover={{
-                              bg: "red.600",
-                              transform: "scale(1.1)",
-                            }}
-                            _active={{
-                              bg: "red.700",
-                            }}
-                          />
-                        )}
-                      </Flex>
-                    </Box>
-                  </Box>
-                );
-              })}
+              {filteredAndSortedResources.map((resource) => (
+                <ResourceCard
+                  key={resource.id}
+                  resource={resource}
+                  backgroundColor={resourceColors[resource.id] || "white"}
+                  onCardClick={handleCardClick}
+                  onEdit={() => navigate(`/edit/${resource.id}`)}
+                  onDelete={handleDeleteEvent}
+                  canEdit={canEditResource(resource)}
+                  canDelete={canDeleteResource(resource)}
+                  showApprovalStatus={currentUser?.role !== "user"}
+                />
+              ))}
             </SimpleGrid>
           ) : (
             <Box textAlign="center" py={10}>
@@ -890,34 +346,12 @@ const HomePage = () => {
                 resource={selectedResource}
                 isOpen={isOpen}
                 onClose={onClose}
-                onEdit={() => handleEditEvent(selectedResource)}
+                onEdit={() => navigate(`/edit/${selectedResource.id}`)}
                 onDelete={() => handleDeleteEvent(selectedResource.id)}
                 canEdit={canEditResource(selectedResource)}
                 canDelete={canDeleteResource(selectedResource)}
               />
             )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
-      {/* Form Modal */}
-      <Modal
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        size="xl"
-        scrollBehavior="inside"
-      >
-        <ModalOverlay backdropFilter="blur(2px)" />
-        <ModalContent>
-          <ModalHeader>
-            {isEditMode ? "Edit Resource" : "Add New Resource"}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <EventForm
-              resource={selectedResource}
-              onSubmit={handleFormSubmit}
-            />
           </ModalBody>
         </ModalContent>
       </Modal>

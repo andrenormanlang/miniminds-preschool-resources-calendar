@@ -9,19 +9,17 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  IconButton,
   Icon,
   Text,
   MenuDivider,
   HStack,
-  useColorModeValue,
   MenuGroup,
 } from "@chakra-ui/react";
-import { FiChevronDown, FiHome, FiMoreVertical } from "react-icons/fi";
+import { ViewIcon } from "@chakra-ui/icons";
+import { FiChevronDown, FiMoreVertical } from "react-icons/fi";
 import {
   GiBookshelf,
   GiBrain,
-  GiCaptainHatProfile,
   GiCrown,
   GiStarFormation,
   GiGraduateCap,
@@ -30,16 +28,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuthFetch } from "../utils/authUtils";
-import {
-  ViewIcon,
-  SettingsIcon,
-  AddIcon,
-  LockIcon,
-  ViewOffIcon,
-  CheckIcon,
-  CloseIcon,
-  TimeIcon,
-} from "@chakra-ui/icons";
 import { MdDashboard } from "react-icons/md";
 
 const Header = () => {

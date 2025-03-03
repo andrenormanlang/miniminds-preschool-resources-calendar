@@ -10,6 +10,9 @@ export type Resource = {
   imageUrl: string;
   isApproved: boolean;
   userId?: number;
+  user?: {
+    name: string;
+  };
 };
 
 export type User = {

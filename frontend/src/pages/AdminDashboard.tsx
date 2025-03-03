@@ -26,18 +26,8 @@ import { useAuthFetch } from "../utils/authUtils";
 import { Resource, User } from "../types/type";
 import Loading from "../components/Loading";
 
-interface User {
-  id: number;
-  clerkId: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  role: string;
-  isApproved: boolean;
-}
-
 const AdminDashboard = () => {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const navigate = useNavigate();
   const toast = useToast();
   const { authFetch } = useAuthFetch();
@@ -45,6 +35,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [pendingResources, setPendingResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [approvedResources, setApprovedResources] = useState<Resource[]>([]);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -82,11 +73,8 @@ const AdminDashboard = () => {
       const usersData = await authFetch("http://localhost:4000/api/users");
       setUsers(usersData);
 
-      // Fetch pending resources
-      const pendingResourcesData = await authFetch(
-        "http://localhost:4000/api/resources/admin/pending"
-      );
-      setPendingResources(pendingResourcesData);
+      // Fetch resources
+      await Promise.all([fetchPendingResources(), fetchApprovedResources()]);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       toast({
@@ -97,6 +85,44 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPendingResources = async () => {
+    try {
+      const pendingResourcesData = await authFetch(
+        "http://localhost:4000/api/resources/admin/pending"
+      );
+      setPendingResources(pendingResourcesData);
+      return pendingResourcesData;
+    } catch (error) {
+      console.error("Error fetching pending resources:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load pending resources",
+        status: "error",
+        duration: 5000,
+      });
+      return [];
+    }
+  };
+
+  const fetchApprovedResources = async () => {
+    try {
+      const approvedResourcesData = await authFetch(
+        "http://localhost:4000/api/resources/admin/approved"
+      );
+      setApprovedResources(approvedResourcesData);
+      return approvedResourcesData;
+    } catch (error) {
+      console.error("Error fetching approved resources:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load approved resources",
+        status: "error",
+        duration: 5000,
+      });
+      return [];
     }
   };
 
@@ -129,10 +155,13 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleChangeRole = async (userId: number, newRole: string) => {
+  const handleChangeRole = async (userId: number, newRole: "user" | "admin" | "superAdmin") => {
     try {
       await authFetch(`http://localhost:4000/api/users/${userId}/role`, {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ role: newRole }),
       });
 
@@ -327,7 +356,7 @@ const AdminDashboard = () => {
                           <Td color="gray.900">{resource.type}</Td>
                           <Td color="gray.900">{resource.subject}</Td>
                           <Td color="gray.900">
-                            {resource.user?.firstName} {resource.user?.lastName}
+                            {resource.user?.name}
                           </Td>
                           <Td>
                             <Button
@@ -446,6 +475,25 @@ const AdminDashboard = () => {
                                 onClick={() => handleApproveUser(user.id)}
                               >
                                 Approve
+                              </Button>
+                            )}
+                            {user.role !== "superAdmin" && (
+                              <Button
+                                size="sm"
+                                ml={2}
+                                bgColor="blue.600"
+                                color="white"
+                                _hover={{ bgColor: "blue.700" }}
+                                onClick={() =>
+                                  handleChangeRole(
+                                    user.id,
+                                    user.role === "user" ? "admin" : "user"
+                                  )
+                                }
+                              >
+                                {user.role === "user"
+                                  ? "Make Admin"
+                                  : "Remove Admin"}
                               </Button>
                             )}
                           </Td>

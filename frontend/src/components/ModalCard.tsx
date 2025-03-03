@@ -77,8 +77,8 @@ const ModalCard: React.FC<ModalCardProps> = ({
   const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(
     null
   );
-  const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
-
+  // Remove unused state variable
+  
   // Fetch current user details when component mounts
   React.useEffect(() => {
     const getCurrentUserInfo = async () => {
@@ -88,7 +88,7 @@ const ModalCard: React.FC<ModalCardProps> = ({
             "http://localhost:4000/api/users/current"
           );
           setCurrentUserRole(currentUser.role);
-          setCurrentUserId(currentUser.id);
+          // Remove the unused state setter
         } catch (err) {
           console.error("Failed to get current user info:", err);
         }
@@ -317,11 +317,7 @@ const ModalCard: React.FC<ModalCardProps> = ({
               <Text fontWeight="semibold" color={metadataColor}>
                 Created by:
                 <Badge ml={2} colorScheme="blue">
-                  {resource.user
-                    ? `${resource.user.firstName || ""} ${
-                        resource.user.lastName || ""
-                      }`.trim()
-                    : "Unknown User"}
+                  {resource.user?.name || "Unknown User"}
                 </Badge>
               </Text>
             </Box>
