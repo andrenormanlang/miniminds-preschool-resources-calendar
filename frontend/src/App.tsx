@@ -1,11 +1,10 @@
 import { useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useUser, UserButton } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import { ChakraProvider } from "@chakra-ui/react";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
-import AdminPage from "./pages/AdminPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import { Box, Button } from "@chakra-ui/react";
@@ -127,7 +126,7 @@ const App = () => {
           <Route
             path="/superadmin"
             element={
-              <ProtectedRoute requiredRole="superAdmin">
+              <ProtectedRoute allowedRoles={["superAdmin"]}>
                 <SuperAdminPage />
               </ProtectedRoute>
             }

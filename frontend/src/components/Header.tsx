@@ -15,6 +15,7 @@ import {
   MenuDivider,
   HStack,
   useColorModeValue,
+  MenuGroup,
 } from "@chakra-ui/react";
 import { FiChevronDown, FiHome, FiMoreVertical } from "react-icons/fi";
 import {
@@ -28,6 +29,17 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuthFetch } from "../utils/authUtils";
+import {
+  ViewIcon,
+  SettingsIcon,
+  AddIcon,
+  LockIcon,
+  ViewOffIcon,
+  CheckIcon,
+  CloseIcon,
+  TimeIcon,
+} from "@chakra-ui/icons";
+import { MdDashboard } from "react-icons/md";
 
 const Header = () => {
   const { isSignedIn, user } = useUser();
@@ -172,20 +184,20 @@ const Header = () => {
                 >
                   {/* Only show Admin Dashboard for superAdmin */}
                   {userRole === "superAdmin" && (
-                    <MenuItem
-                      as={RouterLink}
-                      to="/admin"
-                      icon={
-                        <Icon
-                          as={GiCaptainHatProfile}
-                          boxSize={5}
-                          color="purple.600"
-                        />
-                      }
-                      _hover={{ bg: "purple.50" }}
-                    >
-                      Admin Dashboard
-                    </MenuItem>
+                    <MenuGroup title="Admin Options">
+                      <MenuItem
+                        icon={
+                          <Icon
+                            as={MdDashboard}
+                            boxSize={5}
+                            color="purple.500"
+                          />
+                        }
+                        onClick={() => navigate("/admin")}
+                      >
+                        Admin Dashboard
+                      </MenuItem>
+                    </MenuGroup>
                   )}
 
                   {/* Add Resource option for admins and superAdmins */}
