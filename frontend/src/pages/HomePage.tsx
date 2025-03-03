@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import {
   Box,
@@ -22,13 +22,14 @@ import {
   Spinner,
   IconButton,
 } from "@chakra-ui/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
+import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import ModalCard from "../components/ModalCard";
 import EventForm from "../components/EventForm";
 import { Resource } from "../types/type";
 import Loading from "../components/Loading";
-import { useAuthFetch } from "../utils/authUtils";
-import { useLocation, useNavigate } from "react-router-dom";
-import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
+import { useResourceApi } from "../services/api";
 
 // Function to get a random color for the cards
 const getRandomColor = () => {
@@ -69,120 +70,137 @@ const formatCardDate = (dateString: string) => {
 
 const HomePage = () => {
   const { user, isSignedIn } = useUser();
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedResource, setSelectedResource] = useState<
     Resource | undefined
-  >(undefined);
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Chakra UI modal controls
-  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  >();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const toast = useToast();
-  const { authFetch } = useAuthFetch();
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Get URL parameters to check if we should open the add resource form
-  const params = new URLSearchParams(location.search);
-  const shouldAddResource = params.get("addResource") === "true";
-
-  // Add state for resource colors
+  const queryClient = useQueryClient();
+  const resourceApi = useResourceApi();
   const [resourceColors, setResourceColors] = useState<Record<number, string>>(
     {}
   );
 
-  // Effect to open the form when the URL parameter is present
-  useEffect(() => {
-    if (shouldAddResource && canAddResource()) {
-      handleAddEvent();
-
-      // Clear the URL parameter after handling it
-      navigate("/", { replace: true });
-    }
-  }, [shouldAddResource]);
-
-  useEffect(() => {
-    const getResources = async () => {
-      try {
-        // Fetch resources from API
-        const response = await fetch("http://localhost:4000/api/resources");
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Explicitly sort resources by date in ascending order
-        const sortedResources = [...data].sort((a, b) => {
-          // Parse dates and compare timestamp values
-          const dateA = new Date(a.eventDate).getTime();
-          const dateB = new Date(b.eventDate).getTime();
-          return dateA - dateB;
-        });
-
-        console.log(
-          "Resources sorted by date:",
-          sortedResources.map((r) => ({
-            title: r.title,
-            date: r.eventDate,
-            formattedDate: formatCardDate(r.eventDate),
-          }))
+  // Queries
+  const {
+    data: resources = [],
+    isLoading: isLoadingResources,
+    error: resourcesError,
+  } = useQuery({
+    queryKey: ["resources"],
+    queryFn: resourceApi.getAllResources,
+    select: (data) => {
+      // Sort resources by date
+      return [...data].sort((a, b) => {
+        return (
+          new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
         );
+      });
+    },
+  });
 
-        setResources(sortedResources);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching resources:", error);
-        setError("Failed to load resources");
-        setLoading(false);
-      }
-    };
+  const {
+    data: currentUser,
+    isLoading: isLoadingUser,
+    error: userError,
+  } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: resourceApi.getCurrentUser,
+    enabled: isSignedIn,
+  });
 
-    getResources();
-  }, []);
+  // Mutations
+  const createResourceMutation = useMutation({
+    mutationFn: resourceApi.createResource,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      toast({
+        title: "Resource created",
+        status: "success",
+        duration: 3000,
+      });
+      setIsFormOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error creating resource",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+      });
+    },
+  });
 
-  useEffect(() => {
-    const getCurrentUserInfo = async () => {
-      if (isSignedIn) {
-        try {
-          const currentUser = await authFetch(
-            "http://localhost:4000/api/users/current"
-          );
-          setCurrentUserRole(currentUser.role);
-          setCurrentUserId(currentUser.id);
-        } catch (err) {
-          console.error("Failed to get current user info:", err);
-        }
-      } else {
-        setCurrentUserRole(null);
-        setCurrentUserId(null);
-      }
-    };
+  const updateResourceMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Resource> }) =>
+      resourceApi.updateResource(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      toast({
+        title: "Resource updated",
+        status: "success",
+        duration: 3000,
+      });
+      setIsFormOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error updating resource",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+      });
+    },
+  });
 
-    getCurrentUserInfo();
-  }, [isSignedIn, authFetch]);
+  const deleteResourceMutation = useMutation({
+    mutationFn: resourceApi.deleteResource,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      toast({
+        title: "Resource deleted",
+        status: "success",
+        duration: 3000,
+      });
+      onClose();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error deleting resource",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+      });
+    },
+  });
 
-  // Generate stable random colors for resources
+  // Effect to handle resource colors
   useEffect(() => {
     if (resources.length > 0) {
       const newColors: Record<number, string> = {};
-
       resources.forEach((resource) => {
-        // Only generate a color if one doesn't exist yet
         if (!resourceColors[resource.id]) {
           newColors[resource.id] = getRandomColor();
         }
       });
-
-      // Update resource colors if we have new ones
       if (Object.keys(newColors).length > 0) {
-        setResourceColors((prevColors) => ({ ...prevColors, ...newColors }));
+        setResourceColors((prev) => ({ ...prev, ...newColors }));
       }
     }
   }, [resources]);
+
+  // Effect to handle add resource from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("addResource") === "true" && canAddResource()) {
+      handleAddEvent();
+      navigate("/", { replace: true });
+    }
+  }, [location.search]);
 
   const handleAddEvent = () => {
     setSelectedResource(undefined);
@@ -194,7 +212,7 @@ const HomePage = () => {
     setSelectedResource(resource);
     setIsEditMode(true);
     setIsFormOpen(true);
-    onClose(); // Close the detail modal when opening edit form
+    onClose();
   };
 
   const handleCardClick = (resource: Resource) => {
@@ -202,109 +220,48 @@ const HomePage = () => {
     onOpen();
   };
 
-  const handleFormSubmit = async (data: FormData) => {
-    try {
-      // Ensure the date is in ISO format
-      const isoFormattedDate = new Date(data.eventDate).toISOString();
+  const handleFormSubmit = async (data: Omit<Resource, "id">) => {
+    const isoFormattedDate = new Date(data.eventDate).toISOString();
+    const payload = { ...data, eventDate: isoFormattedDate };
 
-      const payload = {
-        ...data,
-        eventDate: isoFormattedDate,
-      };
-
-      if (isEditMode && selectedResource) {
-        // For editing existing resource
-        await authFetch(
-          `http://localhost:4000/api/resources/${selectedResource.id}`,
-          {
-            method: "PUT",
-            body: JSON.stringify(payload),
-          }
-        );
-
-        // Update local state
-        setResources(
-          resources.map((r) =>
-            r.id === selectedResource.id ? { ...r, ...payload } : r
-          )
-        );
-
-        toast({
-          title: "Resource updated",
-          status: "success",
-          duration: 3000,
-        });
-      } else {
-        // For creating new resource
-        const newResource = await authFetch(
-          "http://localhost:4000/api/resources",
-          {
-            method: "POST",
-            body: JSON.stringify(payload),
-          }
-        );
-
-        setResources([newResource, ...resources]);
-
-        toast({
-          title: "Resource created",
-          status: "success",
-          duration: 3000,
-        });
-      }
-
-      setIsFormOpen(false);
-    } catch (err) {
-      console.error(err);
-      const errorMessage =
-        err instanceof Error ? err.message : "An unexpected error occurred";
-      setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
+    if (isEditMode && selectedResource) {
+      updateResourceMutation.mutate({
+        id: selectedResource.id,
+        data: payload,
       });
+    } else {
+      createResourceMutation.mutate(payload);
     }
   };
 
-  const handleDeleteEvent = async (id: number) => {
-    try {
-      if (!isSignedIn) {
-        throw new Error("You must be logged in to delete resources");
-      }
-
-      // Use authFetch instead of manual token handling
-      await authFetch(`http://localhost:4000/api/resources/${id}`, {
-        method: "DELETE",
-      });
-
-      setResources((prevResources) =>
-        prevResources.filter((res) => res.id !== id)
-      );
-
-      toast({
-        title: "Resource deleted",
-        status: "success",
-        duration: 3000,
-      });
-
-      onClose();
-    } catch (err) {
-      console.error(err);
-      const errorMessage =
-        err instanceof Error ? err.message : "An error occurred";
-      setError(errorMessage);
+  const handleDeleteEvent = (id: number) => {
+    if (!isSignedIn) {
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "You must be logged in to delete resources",
         status: "error",
         duration: 5000,
-        isClosable: true,
       });
+      return;
     }
+    deleteResourceMutation.mutate(id);
   };
+
+  // Permission checks
+  const canAddResource = () => {
+    return currentUser?.role === "admin" || currentUser?.role === "superAdmin";
+  };
+
+  const canEditResource = (resource: Resource) => {
+    if (!isSignedIn || !currentUser?.role) return false;
+    if (currentUser.role === "superAdmin") return true;
+    if (currentUser.role === "admin") {
+      return resource.userId === currentUser.id;
+    }
+    return false;
+  };
+
+  const canDeleteResource = canEditResource;
 
   const renderApprovalStatus = (resource: Resource) => {
     if (!isSignedIn) return null;
@@ -324,33 +281,7 @@ const HomePage = () => {
     );
   };
 
-  // Function to check if user can add resources
-  const canAddResource = () => {
-    return currentUserRole === "admin" || currentUserRole === "superAdmin";
-  };
-
-  // Function to check if user can edit this specific resource
-  const canEditResource = (resource: Resource) => {
-    if (!isSignedIn || !currentUserRole) return false;
-
-    // SuperAdmin can edit any resource
-    if (currentUserRole === "superAdmin") return true;
-
-    // Admin can only edit their own resources
-    if (currentUserRole === "admin") {
-      return resource.userId === currentUserId;
-    }
-
-    return false;
-  };
-
-  // Function to check if user can delete this specific resource
-  const canDeleteResource = (resource: Resource) => {
-    // Same logic as edit permission
-    return canEditResource(resource);
-  };
-
-  if (loading) return <Loading />;
+  if (isLoadingResources || isLoadingUser) return <Loading />;
 
   return (
     <Box
@@ -398,7 +329,7 @@ const HomePage = () => {
         </Box>
 
         {/* Resource Grid */}
-        {loading ? (
+        {isLoadingResources ? (
           <Box textAlign="center" py={10}>
             <Spinner size="xl" color="white" />
             <Text mt={4} color="white" fontSize="lg">
@@ -470,41 +401,55 @@ const HomePage = () => {
                     objectFit="cover"
                   />
 
-                  {/* Card content - this part keeps the random background color */}
+                  {/* Card content */}
                   <Box p={4}>
                     <Text
                       fontWeight="semibold"
                       fontSize="xl"
                       mb={2}
                       noOfLines={1}
+                      color="gray.800"
                     >
                       {resource.title}
                     </Text>
 
                     <Flex mb={3} wrap="wrap" gap={2}>
-                      <Badge colorScheme="blue">{resource.type}</Badge>
-                      <Badge colorScheme="green">{resource.subject}</Badge>
-                      <Badge colorScheme="purple">{resource.ageGroup}</Badge>
+                      <Badge colorScheme="blue" variant="solid">
+                        {resource.type}
+                      </Badge>
+                      <Badge colorScheme="green" variant="solid">
+                        {resource.subject}
+                      </Badge>
+                      <Badge colorScheme="purple" variant="solid">
+                        {resource.ageGroup}
+                      </Badge>
                     </Flex>
 
-                    <Text noOfLines={3} color="gray.600" mb={3}>
+                    <Text noOfLines={3} color="gray.700" mb={3}>
                       {resource.description}
                     </Text>
 
                     {/* Action buttons */}
-                    <Flex mt={4} justify="flex-end">
+                    <Flex mt={4} justify="flex-end" gap={2}>
                       {canEditResource(resource) && (
                         <IconButton
                           icon={<EditIcon />}
                           aria-label="Edit"
-                          mr={2}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEditEvent(resource);
                           }}
                           colorScheme="blue"
-                          variant="ghost"
+                          bg="blue.500"
+                          color="white"
                           size="sm"
+                          _hover={{
+                            bg: "blue.600",
+                            transform: "scale(1.1)",
+                          }}
+                          _active={{
+                            bg: "blue.700",
+                          }}
                         />
                       )}
 
@@ -517,8 +462,16 @@ const HomePage = () => {
                             handleDeleteEvent(resource.id);
                           }}
                           colorScheme="red"
-                          variant="ghost"
+                          bg="red.500"
+                          color="white"
                           size="sm"
+                          _hover={{
+                            bg: "red.600",
+                            transform: "scale(1.1)",
+                          }}
+                          _active={{
+                            bg: "red.700",
+                          }}
                         />
                       )}
                     </Flex>
@@ -592,25 +545,6 @@ const HomePage = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
-
-      {/* Error message */}
-      {error && (
-        <Box
-          position="fixed"
-          bottom={4}
-          right={4}
-          bg="red.500"
-          color="white"
-          p={3}
-          borderRadius="md"
-          boxShadow="lg"
-        >
-          {error}
-          <Button size="sm" ml={2} onClick={() => setError(null)}>
-            Close
-          </Button>
-        </Box>
-      )}
     </Box>
   );
 };
