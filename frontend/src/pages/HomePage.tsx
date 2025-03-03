@@ -10,6 +10,7 @@ import {
   Image,
   Tag,
   Button,
+  ButtonGroup,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -23,7 +24,7 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import ModalCard from "../components/ModalCard";
 import EventForm from "../components/EventForm";
@@ -84,34 +85,37 @@ const HomePage = () => {
   const [resourceColors, setResourceColors] = useState<Record<number, string>>(
     {}
   );
+  const [searchParams] = useSearchParams();
+  const filter = searchParams.get('filter') as 'all' | 'mine' || 'all';
 
-  // Queries
-  const {
-    data: resources = [],
-    isLoading: isLoadingResources,
-    error: resourcesError,
-  } = useQuery({
-    queryKey: ["resources"],
-    queryFn: resourceApi.getAllResources,
-    select: (data) => {
-      // Sort resources by date
-      return [...data].sort((a, b) => {
-        return (
-          new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
-        );
-      });
-    },
-  });
+  // Updated Queries
+  const { data: allResources = [], isLoading: isLoadingAllResources } =
+    useQuery({
+      queryKey: ["resources", "all"],
+      queryFn: resourceApi.getAllResources,
+      enabled: filter === "all",
+    });
 
-  const {
-    data: currentUser,
-    isLoading: isLoadingUser,
-    error: userError,
-  } = useQuery({
+  const { data: userResources = [], isLoading: isLoadingUserResources } =
+    useQuery({
+      queryKey: ["resources", "mine"],
+      queryFn: resourceApi.getUserResources,
+      enabled: filter === "mine" && isSignedIn,
+    });
+
+  const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
     queryFn: resourceApi.getCurrentUser,
     enabled: isSignedIn,
   });
+
+  // Combine and sort resources based on filter
+  const resources = React.useMemo(() => {
+    const resourceList = filter === "all" ? allResources : userResources;
+    return [...resourceList].sort((a, b) => {
+      return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
+    });
+  }, [filter, allResources, userResources]);
 
   // Mutations
   const createResourceMutation = useMutation({
@@ -249,7 +253,8 @@ const HomePage = () => {
 
   // Permission checks
   const canAddResource = () => {
-    return currentUser?.role === "admin" || currentUser?.role === "superAdmin";
+    if (!currentUser) return false;
+    return currentUser.role === "admin" || currentUser.role === "superAdmin";
   };
 
   const canEditResource = (resource: Resource) => {
@@ -264,9 +269,8 @@ const HomePage = () => {
   const canDeleteResource = canEditResource;
 
   const renderApprovalStatus = (resource: Resource) => {
-    if (!isSignedIn) return null;
-    if (!user?.publicMetadata?.role || user.publicMetadata.role === "user")
-      return null;
+    if (!isSignedIn || !currentUser) return null;
+    if (!currentUser.role || currentUser.role === "user") return null;
 
     return (
       <Badge
@@ -281,7 +285,7 @@ const HomePage = () => {
     );
   };
 
-  if (isLoadingResources || isLoadingUser) return <Loading />;
+  if (isLoadingAllResources || isLoadingUserResources) return <Loading />;
 
   return (
     <Box
@@ -303,7 +307,7 @@ const HomePage = () => {
       p={8}
     >
       <Container maxW="1300px" centerContent>
-        {/* Header - removed Add Resource button */}
+        {/* Header - simplified without filter buttons */}
         <Box
           w="100%"
           display="flex"
@@ -329,7 +333,7 @@ const HomePage = () => {
         </Box>
 
         {/* Resource Grid */}
-        {isLoadingResources ? (
+        {isLoadingAllResources || isLoadingUserResources ? (
           <Box textAlign="center" py={10}>
             <Spinner size="xl" color="white" />
             <Text mt={4} color="white" fontSize="lg">
@@ -483,7 +487,9 @@ const HomePage = () => {
         ) : (
           <Box textAlign="center" py={10}>
             <Text fontSize="xl" color="white">
-              No resources available.
+              {filter === "mine"
+                ? "You haven't created any resources yet."
+                : "No resources available."}
             </Text>
           </Box>
         )}

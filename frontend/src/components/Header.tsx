@@ -25,7 +25,7 @@ import {
   GiCrown,
   GiStarFormation,
 } from "react-icons/gi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuthFetch } from "../utils/authUtils";
@@ -46,6 +46,7 @@ const Header = () => {
   const { authFetch } = useAuthFetch();
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Update user role whenever user or signin status changes
   useEffect(() => {
@@ -95,6 +96,11 @@ const Header = () => {
       return GiStarFormation;
     }
     return null;
+  };
+
+  const handleFilterChange = (filter: "all" | "mine") => {
+    setSearchParams({ filter });
+    navigate(`/?filter=${filter}`);
   };
 
   return (
@@ -182,22 +188,53 @@ const Header = () => {
                   border="none"
                   borderRadius="md"
                 >
-                  {/* Only show Admin Dashboard for superAdmin */}
-                  {userRole === "superAdmin" && (
-                    <MenuGroup title="Admin Options">
+                  {/* Filter Options - Show for all signed-in users */}
+                  {isSignedIn && (
+                    <MenuGroup title="View Options">
                       <MenuItem
-                        icon={
-                          <Icon
-                            as={MdDashboard}
-                            boxSize={5}
-                            color="purple.500"
-                          />
+                        icon={<Icon as={ViewIcon} color="purple.500" />}
+                        onClick={() => handleFilterChange("all")}
+                        fontWeight={
+                          searchParams.get("filter") === "all"
+                            ? "bold"
+                            : "normal"
                         }
-                        onClick={() => navigate("/admin")}
                       >
-                        Admin Dashboard
+                        All Resources
+                      </MenuItem>
+                      <MenuItem
+                        icon={<Icon as={GiBookshelf} color="blue.500" />}
+                        onClick={() => handleFilterChange("mine")}
+                        fontWeight={
+                          searchParams.get("filter") === "mine"
+                            ? "bold"
+                            : "normal"
+                        }
+                      >
+                        My Resources
                       </MenuItem>
                     </MenuGroup>
+                  )}
+
+                  {/* Only show Admin Dashboard for superAdmin */}
+                  {userRole === "superAdmin" && (
+                    <>
+                      <MenuDivider />
+                      <MenuGroup title="Admin Options">
+                        <MenuItem
+                          icon={
+                            <Icon
+                              as={MdDashboard}
+                              boxSize={5}
+                              color="purple.500"
+                            />
+                          }
+                          onClick={() => navigate("/admin")}
+                        >
+                          Admin Dashboard
+                        </MenuItem>
+                      </MenuGroup>
+                    </>
                   )}
 
                   {/* Add Resource option for admins and superAdmins */}
