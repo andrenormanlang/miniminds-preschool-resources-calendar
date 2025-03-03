@@ -24,6 +24,7 @@ import {
   GiCaptainHatProfile,
   GiCrown,
   GiStarFormation,
+  GiGraduateCap,
 } from "react-icons/gi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -89,13 +90,15 @@ const Header = () => {
   };
 
   // Helper function to get role icon
-  const getRoleIcon = (role: string) => {
+  const getRoleIcon = (role: string): React.ElementType => {
     if (role.toLowerCase() === "superadmin") {
       return GiCrown;
     } else if (role.toLowerCase() === "admin") {
       return GiStarFormation;
+    } else if (role.toLowerCase() === "user") {
+      return GiGraduateCap;
     }
-    return null;
+    return GiGraduateCap;
   };
 
   const handleFilterChange = (filter: "all" | "mine") => {
@@ -164,32 +167,32 @@ const Header = () => {
                 </Tag>
               )}
 
-              {/* Navigation Menu */}
-              <Menu>
-                <MenuButton
-                  as={Button}
-                  size="sm"
-                  aria-label="Navigation"
-                  variant="solid"
-                  bg="whiteAlpha.300"
-                  color="white"
-                  _hover={{ bg: "whiteAlpha.400" }}
-                  _active={{ bg: "whiteAlpha.500" }}
-                  minW="auto"
-                  p={1.5}
-                  borderRadius="full"
-                >
-                  <FiMoreVertical />
-                </MenuButton>
-                <MenuList
-                  zIndex={100}
-                  bg="white"
-                  shadow="xl"
-                  border="none"
-                  borderRadius="md"
-                >
-                  {/* Filter Options - Show for all signed-in users */}
-                  {isSignedIn && (
+              {/* Navigation Menu - Only show for admin and superAdmin */}
+              {userRole && userRole !== "user" && (
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    size="sm"
+                    aria-label="Navigation"
+                    variant="solid"
+                    bg="whiteAlpha.300"
+                    color="white"
+                    _hover={{ bg: "whiteAlpha.400" }}
+                    _active={{ bg: "whiteAlpha.500" }}
+                    minW="auto"
+                    p={1.5}
+                    borderRadius="full"
+                  >
+                    <FiMoreVertical />
+                  </MenuButton>
+                  <MenuList
+                    zIndex={100}
+                    bg="white"
+                    shadow="xl"
+                    border="none"
+                    borderRadius="md"
+                  >
+                    {/* Filter Options - Show for admin and superAdmin */}
                     <MenuGroup title="View Options">
                       <MenuItem
                         icon={<Icon as={ViewIcon} color="purple.500" />}
@@ -214,46 +217,50 @@ const Header = () => {
                         My Resources
                       </MenuItem>
                     </MenuGroup>
-                  )}
 
-                  {/* Only show Admin Dashboard for superAdmin */}
-                  {userRole === "superAdmin" && (
-                    <>
-                      <MenuDivider />
-                      <MenuGroup title="Admin Options">
+                    {/* Only show Admin Dashboard for superAdmin */}
+                    {userRole === "superAdmin" && (
+                      <>
+                        <MenuDivider />
+                        <MenuGroup title="Admin Options">
+                          <MenuItem
+                            icon={
+                              <Icon
+                                as={MdDashboard}
+                                boxSize={5}
+                                color="purple.500"
+                              />
+                            }
+                            onClick={() => navigate("/admin")}
+                          >
+                            Admin Dashboard
+                          </MenuItem>
+                        </MenuGroup>
+                      </>
+                    )}
+
+                    {/* Add Resource option for admins and superAdmins */}
+                    {canAddResource() && (
+                      <>
+                        <MenuDivider />
                         <MenuItem
+                          onClick={handleAddResource}
                           icon={
                             <Icon
-                              as={MdDashboard}
+                              as={GiBookshelf}
                               boxSize={5}
-                              color="purple.500"
+                              color="teal.500"
                             />
                           }
-                          onClick={() => navigate("/admin")}
+                          _hover={{ bg: "teal.50" }}
                         >
-                          Admin Dashboard
+                          Add Resource
                         </MenuItem>
-                      </MenuGroup>
-                    </>
-                  )}
-
-                  {/* Add Resource option for admins and superAdmins */}
-                  {canAddResource() && (
-                    <>
-                      <MenuDivider />
-                      <MenuItem
-                        onClick={handleAddResource}
-                        icon={
-                          <Icon as={GiBookshelf} boxSize={5} color="teal.500" />
-                        }
-                        _hover={{ bg: "teal.50" }}
-                      >
-                        Add Resource
-                      </MenuItem>
-                    </>
-                  )}
-                </MenuList>
-              </Menu>
+                      </>
+                    )}
+                  </MenuList>
+                </Menu>
+              )}
 
               {/* Clerk User Button with its own dropdown */}
               <UserButton

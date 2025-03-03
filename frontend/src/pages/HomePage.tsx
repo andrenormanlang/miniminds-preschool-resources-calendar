@@ -123,27 +123,20 @@ const HomePage = () => {
     {}
   );
   const [searchParams] = useSearchParams();
-  const filter = (searchParams.get("filter") as "all" | "mine") || "all";
   const [searchQuery, setSearchQuery] = useState("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  // Only show filter options for admin/superAdmin
   const [selectedType, setSelectedType] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("all");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
 
   // Updated Queries
   const { data: allResources = [], isLoading: isLoadingAllResources } =
     useQuery({
       queryKey: ["resources", "all"],
       queryFn: resourceApi.getAllResources,
-      enabled: filter === "all",
-    });
-
-  const { data: userResources = [], isLoading: isLoadingUserResources } =
-    useQuery({
-      queryKey: ["resources", "mine"],
-      queryFn: resourceApi.getUserResources,
-      enabled: filter === "mine" && isSignedIn,
     });
 
   const { data: currentUser } = useQuery({
@@ -152,13 +145,19 @@ const HomePage = () => {
     enabled: isSignedIn,
   });
 
-  // Combine and sort resources based on filter
+  // Filter resources based on approval status for regular users
   const resources = React.useMemo(() => {
-    const resourceList = filter === "all" ? allResources : userResources;
-    return [...resourceList].sort((a, b) => {
+    let resourceList = [...allResources];
+
+    // For regular users, only show approved resources
+    if (currentUser?.role === "user") {
+      resourceList = resourceList.filter((resource) => resource.isApproved);
+    }
+
+    return resourceList.sort((a, b) => {
       return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
     });
-  }, [filter, allResources, userResources]);
+  }, [allResources, currentUser]);
 
   // Enhanced resources filtering and sorting
   const filteredAndSortedResources = React.useMemo(() => {
@@ -174,41 +173,46 @@ const HomePage = () => {
       );
     }
 
-    // Apply type filter
-    if (selectedType !== "all") {
-      filtered = filtered.filter((resource) => resource.type === selectedType);
-    }
+    // Only apply additional filters for admin/superAdmin
+    if (currentUser?.role !== "user") {
+      // Apply type filter
+      if (selectedType !== "all") {
+        filtered = filtered.filter(
+          (resource) => resource.type === selectedType
+        );
+      }
 
-    // Apply subject filter
-    if (selectedSubject !== "all") {
-      filtered = filtered.filter(
-        (resource) => resource.subject === selectedSubject
-      );
-    }
+      // Apply subject filter
+      if (selectedSubject !== "all") {
+        filtered = filtered.filter(
+          (resource) => resource.subject === selectedSubject
+        );
+      }
 
-    // Apply age group filter
-    if (selectedAgeGroup !== "all") {
-      filtered = filtered.filter(
-        (resource) => resource.ageGroup === selectedAgeGroup
-      );
-    }
+      // Apply age group filter
+      if (selectedAgeGroup !== "all") {
+        filtered = filtered.filter(
+          (resource) => resource.ageGroup === selectedAgeGroup
+        );
+      }
 
-    // Apply date range filter
-    if (startDate || endDate) {
-      filtered = filtered.filter((resource) => {
-        const resourceDate = new Date(resource.eventDate);
-        if (startDate && endDate) {
-          return (
-            resourceDate >= new Date(startDate) &&
-            resourceDate <= new Date(endDate)
-          );
-        } else if (startDate) {
-          return resourceDate >= new Date(startDate);
-        } else if (endDate) {
-          return resourceDate <= new Date(endDate);
-        }
-        return true;
-      });
+      // Apply date range filter
+      if (startDate || endDate) {
+        filtered = filtered.filter((resource) => {
+          const resourceDate = new Date(resource.eventDate);
+          if (startDate && endDate) {
+            return (
+              resourceDate >= new Date(startDate) &&
+              resourceDate <= new Date(endDate)
+            );
+          } else if (startDate) {
+            return resourceDate >= new Date(startDate);
+          } else if (endDate) {
+            return resourceDate <= new Date(endDate);
+          }
+          return true;
+        });
+      }
     }
 
     // Sort by date ascending by default
@@ -224,6 +228,7 @@ const HomePage = () => {
     selectedAgeGroup,
     startDate,
     endDate,
+    currentUser,
   ]);
 
   // Get unique values for filters
@@ -413,7 +418,7 @@ const HomePage = () => {
     );
   };
 
-  if (isLoadingAllResources || isLoadingUserResources) return <Loading />;
+  if (isLoadingAllResources) return <Loading />;
 
   return (
     <Box
@@ -435,7 +440,7 @@ const HomePage = () => {
       p={8}
     >
       <Container maxW="1300px" centerContent>
-        {/* Search and Filters Section */}
+        {/* Search and Filters Section - Show for all users */}
         <Grid
           templateColumns={{
             base: "1fr",
@@ -615,7 +620,7 @@ const HomePage = () => {
             </Popover>
           </GridItem>
 
-          {/* Replace Sort Options with Date Range Filter */}
+          {/* Date Range Filter */}
           <GridItem
             colSpan={{ base: 1, md: 2, lg: 3 }}
             position="relative"
@@ -694,9 +699,9 @@ const HomePage = () => {
           </GridItem>
         </Grid>
 
-        {/* Resource Grid - Update z-index */}
+        {/* Resource Grid */}
         <Box position="relative" zIndex="1" w="100%">
-          {isLoadingAllResources || isLoadingUserResources ? (
+          {isLoadingAllResources ? (
             <Box textAlign="center" py={10}>
               <Spinner size="xl" color="white" />
               <Text mt={4} color="white" fontSize="lg">
@@ -853,8 +858,6 @@ const HomePage = () => {
               <Text fontSize="xl" color="white">
                 {searchQuery
                   ? "No resources found matching your search."
-                  : filter === "mine"
-                  ? "You haven't created any resources yet."
                   : "No resources available."}
               </Text>
             </Box>
