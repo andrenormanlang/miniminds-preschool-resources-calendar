@@ -44,6 +44,7 @@ import {
   MenuItem,
   Icon,
   Stack,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -785,25 +786,36 @@ const HomePage = () => {
 
                     {/* Card content */}
                     <Box p={4}>
-                      <Text
-                        fontWeight="semibold"
-                        fontSize="xl"
-                        mb={2}
-                        noOfLines={1}
-                        color="gray.800"
+                      <Tooltip
+                        label={resource.title}
+                        placement="top"
+                        hasArrow
+                        openDelay={500}
+                        isDisabled={resource.title.length < 30}
                       >
-                        {resource.title}
-                      </Text>
+                        <Text
+                          fontWeight="semibold"
+                          fontSize="lg"
+                          mb={2}
+                          noOfLines={1}
+                          color="gray.800"
+                          textOverflow="ellipsis"
+                          overflow="hidden"
+                          whiteSpace="nowrap"
+                        >
+                          {resource.title}
+                        </Text>
+                      </Tooltip>
 
                       <Flex mb={3} wrap="wrap" gap={2}>
                         <Badge colorScheme="blue" variant="solid">
-                          {resource.type}
+                          {resource.type || "Unknown Type"}
                         </Badge>
                         <Badge colorScheme="green" variant="solid">
-                          {resource.subject}
+                          {resource.subject || "Unknown Subject"}
                         </Badge>
                         <Badge colorScheme="purple" variant="solid">
-                          {resource.ageGroup}
+                          {resource.ageGroup || "All Ages"}
                         </Badge>
                       </Flex>
 
