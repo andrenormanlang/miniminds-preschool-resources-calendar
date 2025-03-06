@@ -7,7 +7,7 @@ import userRoutes from './routes/users.js';
 import errorHandler from './middlewares/errorHandler.js';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
-import { Webhook } from 'svix';
+import { Webhook, WebhookEvent } from 'svix';
 import bodyParser from 'body-parser'; // Fixed the typo here
 
 dotenv.config();
@@ -52,7 +52,7 @@ app.post('/api/webhooks', async (req, res) => {
     const webhook = new Webhook(webhookSecret);
     
     // Verify the webhook signature
-    const evt = webhook.verify(payload, {
+    const evt: any = webhook.verify(payload, {
       'svix-id': svixHeaders['svix-id'] as string,
       'svix-timestamp': svixHeaders['svix-timestamp'] as string,
       'svix-signature': svixHeaders['svix-signature'] as string

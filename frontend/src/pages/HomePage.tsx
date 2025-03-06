@@ -163,6 +163,14 @@ const HomePage = () => {
   const filteredAndSortedResources = React.useMemo(() => {
     let filtered = [...resources];
 
+    // Check URL parameters for filter=mine
+    const filterParam = searchParams.get("filter");
+    if (filterParam === "mine" && currentUser) {
+      filtered = filtered.filter(
+        (resource) => resource.userId === currentUser.id
+      );
+    }
+
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -229,6 +237,7 @@ const HomePage = () => {
     startDate,
     endDate,
     currentUser,
+    searchParams,
   ]);
 
   // Get unique values for filters

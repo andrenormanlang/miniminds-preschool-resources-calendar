@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import {
   getAllResources,
   getAllResourcesAdmin,
@@ -57,7 +57,7 @@ router.post(
   "/upload",
   isAdminOrSuperAdmin,
   upload.single("image"),
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     if (req.file && req.file.path) {
       res.json({ imageUrl: req.file.path });
     } else {

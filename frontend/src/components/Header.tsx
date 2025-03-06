@@ -102,8 +102,13 @@ const Header = () => {
   };
 
   const handleFilterChange = (filter: "all" | "mine") => {
-    setSearchParams({ filter });
-    navigate(`/?filter=${filter}`);
+    // Set the filter parameter in the URL
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("filter", filter);
+    setSearchParams(newParams);
+
+    // Navigate with the updated filter parameter
+    navigate(`/?${newParams.toString()}`);
   };
 
   return (
@@ -175,13 +180,15 @@ const Header = () => {
                     size="sm"
                     aria-label="Navigation"
                     variant="solid"
-                    bg="whiteAlpha.300"
+                    bg="whiteAlpha.500"
                     color="white"
-                    _hover={{ bg: "whiteAlpha.400" }}
-                    _active={{ bg: "whiteAlpha.500" }}
+                    _hover={{ bg: "whiteAlpha.700" }}
+                    _active={{ bg: "whiteAlpha.800" }}
                     minW="auto"
                     p={1.5}
                     borderRadius="full"
+                    boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                    isDisabled={false}
                   >
                     <FiMoreVertical />
                   </MenuButton>
@@ -191,6 +198,7 @@ const Header = () => {
                     shadow="xl"
                     border="none"
                     borderRadius="md"
+                    opacity={1}
                   >
                     {/* Filter Options - Show for admin and superAdmin */}
                     <MenuGroup title="View Options">
