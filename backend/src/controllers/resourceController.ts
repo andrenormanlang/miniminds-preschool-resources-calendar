@@ -132,13 +132,39 @@ export const updateResource = async (
   try {
     const userId = req.user?.id;
     const userRole = req.user?.role || "user";
+    const resourceId = parseInt(req.params.id);
 
+    // First, check if the resource exists and get its current data
+    const existingResource = await prisma.resource.findUnique({
+      where: { id: resourceId },
+    });
+
+    if (!existingResource) {
+      return res.status(404).json({ message: "Resource not found" });
+    }
+
+    // Determine if we should maintain approval status
+    let maintainApprovalStatus = false;
+
+    // If the user is an admin editing their own resource, maintain the approval status
+    if (userRole === "admin" && existingResource.userId === userId) {
+      maintainApprovalStatus = true;
+    }
+
+    // If the user is a superAdmin, always maintain the approval status (they can approve separately if needed)
+    if (userRole === "superAdmin") {
+      maintainApprovalStatus = true;
+    }
+
+    // Update the resource with the appropriate approval handling
     const resource = await resourceService.updateResource(
-      parseInt(req.params.id),
+      resourceId,
       req.body,
       userId,
-      userRole
+      userRole,
+      maintainApprovalStatus
     );
+
     res.json(resource);
   } catch (error) {
     next(error);
