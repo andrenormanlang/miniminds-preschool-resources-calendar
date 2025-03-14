@@ -1,6 +1,6 @@
 // src/components/ModalCard.tsx
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Heading,
@@ -40,7 +40,7 @@ const fadeIn = {
 };
 
 const staggerChildren = {
-  hidden: { opacity: 0 },
+
   visible: {
     opacity: 1,
     transition: {
@@ -64,39 +64,37 @@ type ModalCardProps = {
   canDelete: boolean;
 };
 
-const ModalCard: React.FC<ModalCardProps> = ({
+const ModalCard = ({
   resource,
   onEdit,
   onDelete,
   canEdit,
   canDelete,
-}) => {
+}: ModalCardProps) => {
   const { isSignedIn } = useUser();
   const { authFetch } = useAuthFetch();
   const toast = useToast();
-  const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(
     null
   );
-  const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
+  
 
-  // Fetch current user details when component mounts
-  React.useEffect(() => {
-    const getCurrentUserInfo = async () => {
-      if (isSignedIn) {
-        try {
-          const currentUser = await authFetch(
-            "http://localhost:4000/api/users/current"
-          );
-          setCurrentUserRole(currentUser.role);
-          setCurrentUserId(currentUser.id);
-        } catch (err) {
-          console.error("Failed to get current user info:", err);
-        }
+ useEffect(() => {
+  const getCurrentUserInfo = async () => {
+    if (isSignedIn) {
+      try {
+        const currentUser = await authFetch(
+          "http://localhost:4000/api/users/current"
+        );
+        setCurrentUserRole(currentUser.role);
+      } catch (err) {
+        console.error("Failed to get current user info:", err);
       }
-    };
+    }
+  };
 
-    getCurrentUserInfo();
-  }, [isSignedIn, authFetch]);
+  getCurrentUserInfo();
+}, [isSignedIn, authFetch]);
 
   // Function to approve a resource (superAdmin only)
   const canApproveResource = () => {
@@ -203,6 +201,16 @@ const ModalCard: React.FC<ModalCardProps> = ({
             <Tag size="md" colorScheme="green">
               {resource.ageGroup}
             </Tag>
+            {/* Add approval status badge */}
+            <Badge
+              colorScheme={resource.isApproved ? "green" : "orange"}
+              py={1}
+              px={2}
+              borderRadius="md"
+              fontWeight="medium"
+            >
+              {resource.isApproved ? "Approved" : "Pending"}
+            </Badge>
           </HStack>
         </MotionBox>
 

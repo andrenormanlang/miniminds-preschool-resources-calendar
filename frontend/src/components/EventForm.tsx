@@ -1,6 +1,6 @@
 // src/components/EventForm.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -8,20 +8,14 @@ import {
   Textarea,
   FormControl,
   FormLabel,
-  NumberInput,
-  NumberInputField,
+
   Stack,
   Image,
   Spinner,
   Text,
   useToast,
   Select,
-  FormErrorMessage,
-  VStack,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
-  Flex
+
 } from '@chakra-ui/react';
 import { Resource } from '../types/type';
 import { useDropzone } from 'react-dropzone';
@@ -82,16 +76,9 @@ const typeOptions = [
   { value: 'Other', label: 'Other' }
 ];
 
-const ratingOptions = [
-  { value: 5, label: '⭐⭐⭐⭐⭐ (5) - Outstanding' },
-  { value: 4, label: '⭐⭐⭐⭐ (4) - Very Good' },
-  { value: 3, label: '⭐⭐⭐ (3) - Good' },
-  { value: 2, label: '⭐⭐ (2) - Fair' },
-  { value: 1, label: '⭐ (1) - Needs Improvement' }
-];
 
 const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
-  const { authFetch, getToken } = useAuthFetch();
+  const {  getToken } = useAuthFetch();
   const toast = useToast();
   const [formData, setFormData] = useState<FormData>({
     title: resource?.title || '',
@@ -150,13 +137,9 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-  };
-
-  const handleNumberChange = (valueAsString: string, valueAsNumber: number) => {
-    setFormData({ ...formData, rating: valueAsNumber });
   };
 
   const handleSubmit = (e: React.FormEvent) => {

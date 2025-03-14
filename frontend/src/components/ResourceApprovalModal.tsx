@@ -81,7 +81,6 @@ const ResourceApprovalModal: React.FC<ResourceApprovalModalProps> = ({
             <Flex wrap="wrap" gap={2} mb={3}>
               <Badge colorScheme="blue">{resource.subject}</Badge>
               <Badge colorScheme="green">Age: {resource.ageGroup}</Badge>
-              <Badge colorScheme="purple">Rating: {resource.rating}/5</Badge>
             </Flex>
             
             <Text fontWeight="bold" mb={1}>Description:</Text>

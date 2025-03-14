@@ -2,15 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import {
   Box,
-  Heading,
   Text,
   SimpleGrid,
   Container,
   Badge,
   Image,
-  Tag,
   Button,
-  ButtonGroup,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -25,9 +22,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  InputRightElement,
-  Select,
-  HStack,
   VStack,
   Grid,
   GridItem,
@@ -38,10 +32,6 @@ import {
   PopoverArrow,
   PopoverHeader,
   PopoverCloseButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
   Icon,
   Stack,
   Tooltip,
@@ -53,22 +43,14 @@ import {
   DeleteIcon,
   SearchIcon,
   ChevronDownIcon,
-  TimeIcon,
-  SunIcon,
   CalendarIcon,
 } from "@chakra-ui/icons";
 import ModalCard from "../components/ModalCard";
 import EventForm from "../components/EventForm";
-import { Resource } from "../types/type";
+import { EventFormData, Resource } from "../types/type";
 import Loading from "../components/Loading";
 import { useResourceApi } from "../services/api";
-import {
-  FaFilter,
-  FaSort,
-  FaBookOpen,
-  FaUsers,
-  FaGraduationCap,
-} from "react-icons/fa";
+import { FaUsers, FaGraduationCap, FaBookOpen } from "react-icons/fa";
 
 // Function to get a random color for the cards
 const getRandomColor = () => {
@@ -86,17 +68,6 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-type FormData = {
-  title: string;
-  type: string;
-  subject: string;
-  ageGroup: string;
-  rating: number;
-  description: string;
-  eventDate: string;
-  imageUrl: string;
-};
-
 // Add a date formatting function
 const formatCardDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -108,7 +79,7 @@ const formatCardDate = (dateString: string) => {
 };
 
 const HomePage = () => {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const [selectedResource, setSelectedResource] = useState<
     Resource | undefined
   >();
@@ -367,9 +338,16 @@ const HomePage = () => {
     onOpen();
   };
 
-  const handleFormSubmit = async (data: Omit<Resource, "id">) => {
+  const handleFormSubmit = async (data: EventFormData) => {
     const isoFormattedDate = new Date(data.eventDate).toISOString();
-    const payload = { ...data, eventDate: isoFormattedDate };
+
+    // Create a payload that matches what your API expects
+    const payload = {
+      ...data,
+      eventDate: isoFormattedDate,
+      rating: 0, // Default value since it's required by Resource but not by the form
+      isApproved: false, // Default value for new resources
+    };
 
     if (isEditMode && selectedResource) {
       updateResourceMutation.mutate({
@@ -449,7 +427,7 @@ const HomePage = () => {
       }}
       p={8}
     >
-      <Container maxW="1300px" centerContent>
+      <Container maxW="1300px" centerContent isolation="isolate">
         {/* Search and Filters Section - Show for all users */}
         <Grid
           templateColumns={{
@@ -461,11 +439,11 @@ const HomePage = () => {
           w="100%"
           mb={8}
           p={4}
-          bg="whiteAlpha.200"
+          bg="rgba(255, 255, 255, 0.5)" /* Increased opacity for better contrast */
           borderRadius="xl"
           backdropFilter="blur(10px)"
           position="relative"
-          zIndex="10"
+          zIndex="5"
           boxShadow="xl"
         >
           {/* Search Bar - Full Width */}
@@ -476,7 +454,7 @@ const HomePage = () => {
               </InputLeftElement>
               <Input
                 placeholder="Search resources..."
-                bg="white"
+                bg="blue.900"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 _focus={{

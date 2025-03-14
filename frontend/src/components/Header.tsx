@@ -9,37 +9,23 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  IconButton,
   Icon,
-  Text,
   MenuDivider,
   HStack,
-  useColorModeValue,
   MenuGroup,
 } from "@chakra-ui/react";
-import { FiChevronDown, FiHome, FiMoreVertical } from "react-icons/fi";
+import { FiChevronDown, FiMoreVertical } from "react-icons/fi";
 import {
   GiBookshelf,
   GiBrain,
-  GiCaptainHatProfile,
   GiCrown,
   GiStarFormation,
   GiGraduateCap,
 } from "react-icons/gi";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuthFetch } from "../utils/authUtils";
-import {
-  ViewIcon,
-  SettingsIcon,
-  AddIcon,
-  LockIcon,
-  ViewOffIcon,
-  CheckIcon,
-  CloseIcon,
-  TimeIcon,
-} from "@chakra-ui/icons";
 import { MdDashboard } from "react-icons/md";
 
 const Header = () => {
@@ -47,7 +33,6 @@ const Header = () => {
   const { authFetch } = useAuthFetch();
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
 
   // Update user role whenever user or signin status changes
   useEffect(() => {
@@ -80,14 +65,14 @@ const Header = () => {
   };
 
   // Helper function to format role display
-  const formatRoleDisplay = (role: string) => {
-    if (role.toLowerCase() === "superadmin") {
-      return "Super Admin";
-    } else if (role.toLowerCase() === "admin") {
-      return "Admin";
-    }
-    return role;
-  };
+  // const formatRoleDisplay = (role: string) => {
+  //   if (role.toLowerCase() === "superadmin") {
+  //     return "Super Admin";
+  //   } else if (role.toLowerCase() === "admin") {
+  //     return "Admin";
+  //   }
+  //   return role;
+  // };
 
   // Helper function to get role icon
   const getRoleIcon = (role: string): React.ElementType => {
@@ -101,24 +86,15 @@ const Header = () => {
     return GiGraduateCap;
   };
 
-  const handleFilterChange = (filter: "all" | "mine") => {
-    // Set the filter parameter in the URL
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("filter", filter);
-    setSearchParams(newParams);
-
-    // Navigate with the updated filter parameter
-    navigate(`/?${newParams.toString()}`);
-  };
-
   return (
     <Box
-      bg="linear-gradient(135deg, #6B46C1 0%, #9F7AEA 100%)"
+      bg="#6B46C1"
       px={4}
       boxShadow="0 4px 6px rgba(0,0,0,0.1)"
       position="sticky"
       top={0}
-      zIndex={10}
+      zIndex={1100}
+      isolation="isolate"
     >
       <Flex h={16} alignItems="center" justifyContent="space-between">
         {/* Logo - colorful and kid-friendly */}
@@ -167,7 +143,7 @@ const Header = () => {
                         color="yellow.300"
                       />
                     )}
-                    <Text>{formatRoleDisplay(userRole)}</Text>
+                    {/* <Text>{formatRoleDisplay(userRole)}</Text> */}
                   </HStack>
                 </Tag>
               )}
@@ -180,10 +156,10 @@ const Header = () => {
                     size="sm"
                     aria-label="Navigation"
                     variant="solid"
-                    bg="whiteAlpha.500"
-                    color="white"
-                    _hover={{ bg: "whiteAlpha.700" }}
-                    _active={{ bg: "whiteAlpha.800" }}
+                    bg="white"
+                    color="purple.700"
+                    _hover={{ bg: "gray.100" }}
+                    _active={{ bg: "gray.200" }}
                     minW="auto"
                     p={1.5}
                     borderRadius="full"
@@ -193,44 +169,37 @@ const Header = () => {
                     <FiMoreVertical />
                   </MenuButton>
                   <MenuList
-                    zIndex={100}
+                    zIndex={1000}
                     bg="white"
                     shadow="xl"
                     border="none"
                     borderRadius="md"
+                    position="relative"
+                    backgroundColor="white"
                     opacity={1}
+                    sx={{
+                      "& > *": {
+                        // Target all direct children
+                        backgroundColor: "white !important",
+                        opacity: "1 !important",
+                      },
+                      "& .chakra-menu__group": {
+                        backgroundColor: "white !important",
+                      },
+                      "& .chakra-menu__menu-item": {
+                        backgroundColor: "white !important",
+                        opacity: "1 !important",
+                      },
+                    }}
                   >
-                    {/* Filter Options - Show for admin and superAdmin */}
-                    <MenuGroup title="View Options">
-                      <MenuItem
-                        icon={<Icon as={ViewIcon} color="purple.500" />}
-                        onClick={() => handleFilterChange("all")}
-                        fontWeight={
-                          searchParams.get("filter") === "all"
-                            ? "bold"
-                            : "normal"
-                        }
-                      >
-                        All Resources
-                      </MenuItem>
-                      <MenuItem
-                        icon={<Icon as={GiBookshelf} color="blue.500" />}
-                        onClick={() => handleFilterChange("mine")}
-                        fontWeight={
-                          searchParams.get("filter") === "mine"
-                            ? "bold"
-                            : "normal"
-                        }
-                      >
-                        My Resources
-                      </MenuItem>
-                    </MenuGroup>
-
                     {/* Only show Admin Dashboard for superAdmin */}
                     {userRole === "superAdmin" && (
                       <>
-                        <MenuDivider />
-                        <MenuGroup title="Admin Options">
+                        <MenuGroup 
+                          title="Admin Options" 
+                          color="purple.600" 
+                          fontWeight="bold"
+                        >
                           <MenuItem
                             icon={
                               <Icon
@@ -240,31 +209,40 @@ const Header = () => {
                               />
                             }
                             onClick={() => navigate("/admin")}
+                            bg="purple.50"
+                            color="purple.700"
+                            _hover={{ bg: "purple.100" }}
+                            fontWeight="500"
+                            borderLeft="4px solid"
+                            borderColor="purple.500"
+                            paddingLeft="4"
+                            transition="all 0.2s"
                           >
                             Admin Dashboard
                           </MenuItem>
                         </MenuGroup>
+                        <MenuDivider borderColor="purple.200" />
                       </>
                     )}
 
                     {/* Add Resource option for admins and superAdmins */}
                     {canAddResource() && (
-                      <>
-                        <MenuDivider />
-                        <MenuItem
-                          onClick={handleAddResource}
-                          icon={
-                            <Icon
-                              as={GiBookshelf}
-                              boxSize={5}
-                              color="teal.500"
-                            />
-                          }
-                          _hover={{ bg: "teal.50" }}
-                        >
-                          Add Resource
-                        </MenuItem>
-                      </>
+                      <MenuItem
+                        onClick={handleAddResource}
+                        icon={
+                          <Icon as={GiBookshelf} boxSize={5} color="teal.500" />
+                        }
+                        bg="teal.50"
+                        color="teal.700"
+                        _hover={{ bg: "teal.100" }}
+                        fontWeight="500"
+                        borderLeft="4px solid"
+                        borderColor="teal.500"
+                        paddingLeft="4"
+                        transition="all 0.2s"
+                      >
+                        Add Resource
+                      </MenuItem>
                     )}
                   </MenuList>
                 </Menu>
@@ -283,9 +261,16 @@ const Header = () => {
                       border: "1px solid",
                       borderColor: "gray.200",
                       boxShadow: "lg",
+                      backgroundColor: "white",
+                      zIndex: 1500,
+                      position: "relative",
+                      opacity: 1,
                     },
                     userButtonPopoverActionButton: {
                       fontWeight: "500",
+                      backgroundColor: "white",
+                      opacity: 1,
+                      color: "#1A202C",
                       "&:hover": {
                         backgroundColor: "rgba(99, 102, 241, 0.1)",
                         color: "purple.600",
@@ -296,7 +281,29 @@ const Header = () => {
                       marginRight: "12px",
                       width: "20px",
                       height: "20px",
+                      opacity: 1,
                     },
+                    userButtonPopoverFooter: {
+                      backgroundColor: "white",
+                      opacity: 1,
+                    },
+                    userPreviewMainIdentifier: {
+                      color: "#1A202C",
+                      opacity: 1,
+                    },
+                    userPreviewSecondaryIdentifier: {
+                      color: "#4A5568",
+                      opacity: 1,
+                    },
+                    userButtonPopoverActionButtonText: {
+                      color: "#1A202C",
+                      opacity: 1,
+                    },
+                  },
+                  variables: {
+                    colorBackground: "white",
+                    colorText: "#1A202C",
+                    colorPrimary: "#6B46C1",
                   },
                 }}
               />
@@ -304,11 +311,11 @@ const Header = () => {
           ) : (
             <SignInButton mode="modal">
               <Button
-                bg="whiteAlpha.300"
-                color="white"
+                bg="white"
+                color="purple.700"
                 size={{ base: "sm", md: "md" }}
-                _hover={{ bg: "whiteAlpha.400" }}
-                _active={{ bg: "whiteAlpha.500" }}
+                _hover={{ bg: "gray.100" }}
+                _active={{ bg: "gray.200" }}
                 leftIcon={<Icon as={FiChevronDown} />}
                 fontWeight="500"
                 boxShadow="0 2px 4px rgba(0,0,0,0.2)"
