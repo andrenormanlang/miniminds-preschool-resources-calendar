@@ -25,7 +25,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   duration = 5000,
 }) => {
   const { isOpen, onClose } = useDisclosure({ defaultIsOpen: true });
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [timeoutId, setTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (autoClose && isOpen) {

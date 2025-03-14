@@ -1,16 +1,20 @@
-export type Resource = {
+export interface Resource {
   id: number;
   title: string;
-  type: string; 
+  description: string;
+  type: string;
   subject: string;
   ageGroup: string;
-  rating: number;
-  description: string;
   eventDate: string;
-  imageUrl: string;
-  isApproved: boolean;
+  imageUrl?: string;
   userId?: number;
-};
+  isApproved?: boolean;
+  // Add the user property
+  user?: {
+    firstName?: string;
+    lastName?: string;
+  };
+}
 
 export type User = {
   id: number;
@@ -20,3 +24,16 @@ export type User = {
   role: 'user' | 'admin' | 'superAdmin';
   isApproved: boolean;
 };
+
+
+
+
+export type EventFormData = {
+  title: string;
+  type: string;
+  subject: string;
+  ageGroup: string;
+  description: string;
+  eventDate: string;
+  imageUrl: string;
+}

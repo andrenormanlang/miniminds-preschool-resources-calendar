@@ -1,6 +1,7 @@
 import { Button, ButtonProps } from '@chakra-ui/react';
 import { useUser } from '@clerk/clerk-react';
-import { hasRole } from '../utils/roles';
+import { hasRole } from '../utils/RoleUtility';
+
 
 interface RoleBasedButtonProps extends ButtonProps {
   requiredRole: string;
