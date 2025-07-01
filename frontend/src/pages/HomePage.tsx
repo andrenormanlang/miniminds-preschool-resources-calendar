@@ -10,9 +10,7 @@ import {
   Button,
   useDisclosure,
   Modal,
-  ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalCloseButton,
   ModalBody,
   Flex,
@@ -28,13 +26,15 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-  PopoverBody,
   PopoverArrow,
+  PopoverBody,
   PopoverHeader,
   PopoverCloseButton,
   Icon,
   Stack,
   Tooltip,
+  ModalOverlay,
+  ModalHeader,
 } from "@chakra-ui/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -95,7 +95,7 @@ const isValidDate = (date: Date) => {
 };
 
 const getNextValidDate = (date: Date, direction: number) => {
-  let nextDate = new Date(date);
+  const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + direction);
   while (!isValidDate(nextDate)) {
     nextDate.setDate(nextDate.getDate() + direction);
@@ -123,11 +123,32 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
   // Only show filter options for admin/superAdmin
   const [selectedType, setSelectedType] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("all");
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDate = currentDateTime.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = currentDateTime.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 
   // Updated Queries
   const { data: allResources = [], isLoading: isLoadingAllResources } =
@@ -767,6 +788,36 @@ const HomePage = () => {
             </Popover>
           </GridItem>
         </Grid>
+
+        {/* Date and Time Display */}
+        <Box
+          textAlign="center"
+          mb={8}
+          p={4}
+          bg="rgba(255, 255, 255, 0.5)"
+          borderRadius="xl"
+          backdropFilter="blur(10px)"
+          boxShadow="xl"
+          width="100%"
+        >
+          <Text
+            fontSize={{ base: "md", md: "lg" }}
+            fontWeight="bold"
+            color="purple.800"
+            textShadow="1px 1px 2px rgba(0,0,0,0.1)"
+            whiteSpace="nowrap"
+          >
+            {formattedDate}
+          </Text>
+          <Text
+            fontSize={{ base: "xs", md: "sm" }}
+            color="purple.700"
+            textShadow="1px 1px 2px rgba(0,0,0,0.1)"
+            whiteSpace="nowrap"
+          >
+            {formattedTime}
+          </Text>
+        </Box>
 
         {/* Resource Grid */}
         <DragDropContext onDragEnd={onDragEnd}>
