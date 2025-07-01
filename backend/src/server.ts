@@ -7,7 +7,7 @@ import userRoutes from './routes/users.js';
 import errorHandler from './middlewares/errorHandler.js';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
-import { Webhook, WebhookEvent } from 'svix';
+import { Webhook } from 'svix';
 import bodyParser from 'body-parser'; // Fixed the typo here
 
 dotenv.config();
@@ -176,6 +176,9 @@ app.post('/api/webhooks', async (req, res) => {
 
 // Error Handling Middleware
 app.use(errorHandler);
+
+// WSL2 Browser testing
+// run as npm run dev -- --host 0.0.0.0
 
 // Start Server
 const PORT = process.env.PORT || 4000;

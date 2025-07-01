@@ -45,6 +45,12 @@ import {
   ChevronDownIcon,
   CalendarIcon,
 } from "@chakra-ui/icons";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
 import ModalCard from "../components/ModalCard";
 import EventForm from "../components/EventForm";
 import { EventFormData, Resource } from "../types/type";
@@ -76,6 +82,25 @@ const formatCardDate = (dateString: string) => {
     day: "numeric",
     month: "long",
   });
+};
+
+const swedishHolidays2025 = ["2025-11-01"];
+
+const isValidDate = (date: Date) => {
+  const dayOfWeek = date.getDay();
+  const isWeekday = dayOfWeek > 0 && dayOfWeek < 6;
+  const dateStr = date.toISOString().split("T")[0];
+  const isHoliday = swedishHolidays2025.includes(dateStr);
+  return isWeekday && !isHoliday;
+};
+
+const getNextValidDate = (date: Date, direction: number) => {
+  let nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + direction);
+  while (!isValidDate(nextDate)) {
+    nextDate.setDate(nextDate.getDate() + direction);
+  }
+  return nextDate;
 };
 
 const HomePage = () => {
@@ -387,6 +412,62 @@ const HomePage = () => {
     return false;
   };
 
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+
+    if (!destination || destination.index === source.index) {
+      return;
+    }
+
+    const items = Array.from(filteredAndSortedResources);
+    const [reorderedItem] = items.splice(source.index, 1);
+    items.splice(destination.index, 0, reorderedItem);
+
+    const updatedResource = filteredAndSortedResources.find(
+      (r) => r.id === parseInt(draggableId)
+    );
+
+    if (updatedResource) {
+      let newEventDate: Date;
+
+      const itemAfter = items[destination.index + 1];
+      const itemBefore = items[destination.index - 1];
+
+      if (itemAfter) {
+        // If there's a card after the drop position, set date to 1 day before it.
+        newEventDate = getNextValidDate(new Date(itemAfter.eventDate), -1);
+      } else if (itemBefore) {
+        // If it's dropped at the end, set date to 1 day after the card before it.
+        newEventDate = getNextValidDate(new Date(itemBefore.eventDate), 1);
+      } else {
+        // Should not happen in a list with more than one item, but as a fallback:
+        return;
+      }
+
+      const { id, user, userId, ...rest } = updatedResource;
+      updateResourceMutation.mutate(
+        {
+          id: updatedResource.id,
+          data: {
+            ...rest,
+            eventDate: newEventDate.toISOString(),
+          },
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["resources"] });
+            toast({
+              title: "Resource date updated!",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+          },
+        }
+      );
+    }
+  };
+
   const canDeleteResource = canEditResource;
 
   const renderApprovalStatus = (resource: Resource) => {
@@ -688,180 +769,203 @@ const HomePage = () => {
         </Grid>
 
         {/* Resource Grid */}
-        <Box position="relative" zIndex="1" w="100%">
-          {isLoadingAllResources ? (
-            <Box textAlign="center" py={10}>
-              <Spinner size="xl" color="white" />
-              <Text mt={4} color="white" fontSize="lg">
-                Loading resources...
-              </Text>
-            </Box>
-          ) : filteredAndSortedResources.length > 0 ? (
-            <SimpleGrid
-              columns={[1, 2, 3, 4]}
-              spacing={6}
-              mt={8}
-              sx={{
-                gridAutoFlow: "row",
-                display: "grid",
-                gridTemplateColumns: {
-                  base: "repeat(1, 1fr)",
-                  sm: "repeat(2, 1fr)",
-                  md: "repeat(3, 1fr)",
-                  lg: "repeat(4, 1fr)",
-                },
-              }}
-            >
-              {filteredAndSortedResources.map((resource) => {
-                return (
-                  <Box
-                    key={resource.id}
-                    onClick={() => handleCardClick(resource)}
-                    cursor="pointer"
-                    borderWidth="1px"
-                    borderRadius="lg"
-                    overflow="hidden"
-                    boxShadow="md"
-                    position="relative"
-                    bg={resourceColors[resource.id] || "white"} // Use the precomputed color or default to white
-                    transition="transform 0.3s, box-shadow 0.3s"
-                    _hover={{
-                      transform: "translateY(-5px)",
-                      boxShadow: "xl",
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="resources">
+            {(provided) => (
+              <Box
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                position="relative"
+                zIndex="1"
+                w="100%"
+              >
+                {isLoadingAllResources ? (
+                  <Box textAlign="center" py={10}>
+                    <Spinner size="xl" color="white" />
+                    <Text mt={4} color="white" fontSize="lg">
+                      Loading resources...
+                    </Text>
+                  </Box>
+                ) : filteredAndSortedResources.length > 0 ? (
+                  <SimpleGrid
+                    columns={[1, 2, 3, 4]}
+                    spacing={6}
+                    mt={8}
+                    sx={{
+                      gridAutoFlow: "row",
+                      display: "grid",
+                      gridTemplateColumns: {
+                        base: "repeat(1, 1fr)",
+                        sm: "repeat(2, 1fr)",
+                        md: "repeat(3, 1fr)",
+                        lg: "repeat(4, 1fr)",
+                      },
                     }}
                   >
-                    {/* Badge for approval status */}
-                    {renderApprovalStatus(resource)}
-
-                    {/* Date badge - top right */}
-                    <Text
-                      position="absolute"
-                      top={2}
-                      right={2}
-                      bg="blue.500"
-                      color="white"
-                      px={2}
-                      py={1}
-                      borderRadius="md"
-                      fontSize="sm"
-                      fontWeight="bold"
-                      zIndex={1}
-                    >
-                      {formatCardDate(resource.eventDate)}
-                    </Text>
-
-                    {/* Image */}
-                    <Image
-                      src={
-                        resource.imageUrl ||
-                        "https://via.placeholder.com/300x200"
-                      }
-                      alt={resource.title}
-                      height="200px"
-                      width="100%"
-                      objectFit="cover"
-                    />
-
-                    {/* Card content */}
-                    <Box p={4}>
-                      <Tooltip
-                        label={resource.title}
-                        placement="top"
-                        hasArrow
-                        openDelay={500}
-                        isDisabled={resource.title.length < 30}
+                    {filteredAndSortedResources.map((resource, index) => (
+                      <Draggable
+                        key={resource.id}
+                        draggableId={resource.id.toString()}
+                        index={index}
+                        isDragDisabled={!canEditResource(resource)}
                       >
-                        <Text
-                          fontWeight="semibold"
-                          fontSize="lg"
-                          mb={2}
-                          noOfLines={1}
-                          color="gray.800"
-                          textOverflow="ellipsis"
-                          overflow="hidden"
-                          whiteSpace="nowrap"
-                        >
-                          {resource.title}
-                        </Text>
-                      </Tooltip>
-
-                      <Flex mb={3} wrap="wrap" gap={2}>
-                        <Badge colorScheme="blue" variant="solid">
-                          {resource.type || "Unknown Type"}
-                        </Badge>
-                        <Badge colorScheme="green" variant="solid">
-                          {resource.subject || "Unknown Subject"}
-                        </Badge>
-                        <Badge colorScheme="purple" variant="solid">
-                          {resource.ageGroup || "All Ages"}
-                        </Badge>
-                      </Flex>
-
-                      <Text noOfLines={3} color="gray.700" mb={3}>
-                        {resource.description}
-                      </Text>
-
-                      {/* Action buttons */}
-                      <Flex mt={4} justify="flex-end" gap={2}>
-                        {canEditResource(resource) && (
-                          <IconButton
-                            icon={<EditIcon />}
-                            aria-label="Edit"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditEvent(resource);
-                            }}
-                            colorScheme="blue"
-                            bg="blue.500"
-                            color="white"
-                            size="sm"
+                        {(provided, snapshot) => (
+                          <Box
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            onClick={() => handleCardClick(resource)}
+                            cursor="pointer"
+                            borderWidth="1px"
+                            borderRadius="lg"
+                            overflow="hidden"
+                            boxShadow={snapshot.isDragging ? "0 0 20px rgba(0,0,0,0.3)" : "md"}
+                            position="relative"
+                            bg={resourceColors[resource.id] || "white"}
+                            transition="transform 0.3s, box-shadow 0.3s, background-color 0.2s"
+                            transform={snapshot.isDragging ? "scale(1.05)" : "scale(1)"}
                             _hover={{
-                              bg: "blue.600",
-                              transform: "scale(1.1)",
+                              transform: "translateY(-5px)",
+                              boxShadow: "xl",
                             }}
-                            _active={{
-                              bg: "blue.700",
-                            }}
-                          />
-                        )}
+                          >
+                            {/* Badge for approval status */}
+                            {renderApprovalStatus(resource)}
 
-                        {canDeleteResource(resource) && (
-                          <IconButton
-                            icon={<DeleteIcon />}
-                            aria-label="Delete"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteEvent(resource.id);
-                            }}
-                            colorScheme="red"
-                            bg="red.500"
-                            color="white"
-                            size="sm"
-                            _hover={{
-                              bg: "red.600",
-                              transform: "scale(1.1)",
-                            }}
-                            _active={{
-                              bg: "red.700",
-                            }}
-                          />
+                            {/* Date badge - top right */}
+                            <Text
+                              position="absolute"
+                              top={2}
+                              right={2}
+                              bg="blue.500"
+                              color="white"
+                              px={2}
+                              py={1}
+                              borderRadius="md"
+                              fontSize="sm"
+                              fontWeight="bold"
+                              zIndex={1}
+                            >
+                              {formatCardDate(resource.eventDate)}
+                            </Text>
+
+                            {/* Image */}
+                            <Image
+                              src={
+                                resource.imageUrl ||
+                                "https://via.placeholder.com/300x200"
+                              }
+                              alt={resource.title}
+                              height="200px"
+                              width="100%"
+                              objectFit="cover"
+                            />
+
+                            {/* Card content */}
+                            <Box p={4}>
+                              <Tooltip
+                                label={resource.title}
+                                placement="top"
+                                hasArrow
+                                openDelay={500}
+                                isDisabled={resource.title.length < 30}
+                              >
+                                <Text
+                                  fontWeight="semibold"
+                                  fontSize="lg"
+                                  mb={2}
+                                  noOfLines={1}
+                                  color="gray.800"
+                                  textOverflow="ellipsis"
+                                  overflow="hidden"
+                                  whiteSpace="nowrap"
+                                >
+                                  {resource.title}
+                                </Text>
+                              </Tooltip>
+
+                              <Flex mb={3} wrap="wrap" gap={2}>
+                                <Badge colorScheme="blue" variant="solid">
+                                  {resource.type || "Unknown Type"}
+                                </Badge>
+                                <Badge colorScheme="green" variant="solid">
+                                  {resource.subject || "Unknown Subject"}
+                                </Badge>
+                                <Badge colorScheme="purple" variant="solid">
+                                  {resource.ageGroup || "All Ages"}
+                                </Badge>
+                              </Flex>
+
+                              <Text noOfLines={3} color="gray.700" mb={3}>
+                                {resource.description}
+                              </Text>
+
+                              {/* Action buttons */}
+                              <Flex mt={4} justify="flex-end" gap={2}>
+                                {canEditResource(resource) && (
+                                  <IconButton
+                                    icon={<EditIcon />}
+                                    aria-label="Edit"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditEvent(resource);
+                                    }}
+                                    colorScheme="blue"
+                                    bg="blue.500"
+                                    color="white"
+                                    size="sm"
+                                    _hover={{
+                                      bg: "blue.600",
+                                      transform: "scale(1.1)",
+                                    }}
+                                    _active={{
+                                      bg: "blue.700",
+                                    }}
+                                  />
+                                )}
+
+                                {canDeleteResource(resource) && (
+                                  <IconButton
+                                    icon={<DeleteIcon />}
+                                    aria-label="Delete"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteEvent(resource.id);
+                                    }}
+                                    colorScheme="red"
+                                    bg="red.500"
+                                    color="white"
+                                    size="sm"
+                                    _hover={{
+                                      bg: "red.600",
+                                      transform: "scale(1.1)",
+                                    }}
+                                    _active={{
+                                      bg: "red.700",
+                                    }}
+                                  />
+                                )}
+                              </Flex>
+                            </Box>
+                          </Box>
                         )}
-                      </Flex>
-                    </Box>
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </SimpleGrid>
+                ) : (
+                  <Box textAlign="center" py={10}>
+                    <Text fontSize="xl" color="white">
+                      {searchQuery
+                        ? "No resources found matching your search."
+                        : "No resources available."}
+                    </Text>
                   </Box>
-                );
-              })}
-            </SimpleGrid>
-          ) : (
-            <Box textAlign="center" py={10}>
-              <Text fontSize="xl" color="white">
-                {searchQuery
-                  ? "No resources found matching your search."
-                  : "No resources available."}
-              </Text>
-            </Box>
-          )}
-        </Box>
+                )}
+              </Box>
+            )}
+          </Droppable>
+        </DragDropContext>
       </Container>
 
       {/* Resource Detail Modal */}
