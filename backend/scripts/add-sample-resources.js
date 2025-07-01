@@ -5,7 +5,7 @@ dotenv.config();
 
 // Constants
 const API_URL = "http://localhost:4000/api";
-const NUM_RESOURCES = 50; // Changed to 50 resources
+let NUM_RESOURCES = 50; // Changed to 50 resources
 
 // Resource options from your form
 const typeOptions = [
@@ -99,55 +99,42 @@ const titleTemplates = {
   // Add more as needed
 };
 
-// Swedish holidays for Spring 2025
-const swedishHolidays2025 = [
-  "2025-01-01", // New Year's Day
-  "2025-01-06", // Epiphany
-  "2025-04-18", // Good Friday
-  "2025-04-20", // Easter Sunday
-  "2025-04-21", // Easter Monday
-  "2025-05-01", // Labour Day
-  "2025-05-29", // Ascension Day
-  "2025-06-06", // National Day
-  "2025-06-08", // Pentecost
-  "2025-06-20", // Midsummer Eve
-];
+// Swedish holidays for Autumn 2025
+const swedishHolidays2025 = ["2025-11-01"]; // All Saints' Day
 
-// Helper function to get spring weekday dates (March-May 2025) in Sweden, excluding holidays
-const getSpringWeekdayDate = () => {
-  // Spring in Sweden is roughly March through May
-  const springStart = new Date("2025-03-01");
-  const springEnd = new Date("2025-05-31");
+const getValidWeekdays = () => {
+  const autumnStart = new Date("2025-08-15");
+  const autumnEnd = new Date("2025-10-15");
+  const validWeekdays = new Set();
 
-  let validDate = false;
-  let dateStr = "";
-
-  while (!validDate) {
-    // Generate a random date within spring 2025
-    const randomDay = Math.floor(
-      Math.random() * (springEnd.getTime() - springStart.getTime())
-    );
-    const date = new Date(springStart.getTime() + randomDay);
-
-    // Format as YYYY-MM-DD
-    dateStr = date.toISOString().split("T")[0];
-
-    // Check if it's a weekday (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-    const dayOfWeek = date.getDay();
+  for (
+    let d = new Date(autumnStart);
+    d <= autumnEnd;
+    d.setDate(d.getDate() + 1)
+  ) {
+    const dayOfWeek = d.getDay();
     const isWeekday = dayOfWeek > 0 && dayOfWeek < 6;
-
-    // Check if it's not a holiday
+    const dateStr = d.toISOString().split("T")[0];
     const isHoliday = swedishHolidays2025.includes(dateStr);
 
-    // Valid if it's a weekday and not a holiday
-    validDate = isWeekday && !isHoliday;
+    if (isWeekday && !isHoliday) {
+      validWeekdays.add(dateStr);
+    }
   }
-
-  return dateStr;
+  return Array.from(validWeekdays);
 };
 
-// Replace the existing getRandomFutureDate function with our new spring weekday function
-const getRandomFutureDate = getSpringWeekdayDate;
+const availableDates = getValidWeekdays();
+NUM_RESOURCES = availableDates.length;
+
+const getRandomFutureDate = () => {
+  if (availableDates.length === 0) {
+    throw new Error("No available dates left to assign.");
+  }
+  const randomIndex = Math.floor(Math.random() * availableDates.length);
+  const selectedDate = availableDates.splice(randomIndex, 1)[0];
+  return selectedDate;
+};
 
 // Helper function to get random item from array
 const getRandomItem = (array) =>
