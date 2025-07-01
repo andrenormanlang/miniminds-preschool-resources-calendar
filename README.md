@@ -13,6 +13,7 @@ MiniMinds is a platform designed to connect educators and parents with  preschoo
 - 🎨 **Colorful, Kid-Friendly Interface**
 - 🧩 **Resource Discovery** - Easily find learning materials by subject, type, and age group
 - 📤 **Content Sharing** - Educators can contribute their own resources to the community
+- 🗓️ **Drag-and-Drop Calendar** - Admins can easily reorder and update event dates directly on the calendar.
 - 👑 **Role-Based Access** - Different capabilities for Users, Admins, and Super Admins
 - 📱 **Responsive Design** 
 - 🔐 **Secure Authentication** - Powered by Clerk
@@ -46,6 +47,10 @@ MiniMinds is a platform designed to connect educators and parents with  preschoo
    cd backend
    npm install
    # Set up your .env file with database and Clerk credentials
+   # To add sample data (English, unique dates, no weekends/holidays):
+   node scripts/add-sample-resources.js
+   # To clear all existing data and Cloudinary images:
+   node scripts/cleanup-resources.js
    npm run dev
    ```
 
