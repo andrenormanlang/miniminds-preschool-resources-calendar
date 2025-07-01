@@ -13,6 +13,7 @@ import {
   MenuDivider,
   HStack,
   MenuGroup,
+  Text, // Added Text component for displaying date/time
 } from "@chakra-ui/react";
 import { FiChevronDown, FiMoreVertical } from "react-icons/fi";
 import {
@@ -33,6 +34,27 @@ const Header = () => {
   const { authFetch } = useAuthFetch();
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDate = currentDateTime.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = currentDateTime.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 
   // Update user role whenever user or signin status changes
   useEffect(() => {
@@ -96,26 +118,58 @@ const Header = () => {
       zIndex={1100}
       isolation="isolate"
     >
-      <Flex h={16} alignItems="center" justifyContent="space-between">
-        {/* Logo - colorful and kid-friendly */}
-        <Box>
-          <RouterLink to="/">
-            <HStack spacing={2}>
-              <Icon as={GiBrain} boxSize={8} color="yellow.300" />
-              <Heading
-                size="lg"
-                fontFamily="Montserrat Alternates"
-                fontWeight="800"
-                color="white"
-                textShadow="1px 1px 2px rgba(0,0,0,0.3)"
-              >
-                MiniMinds
-              </Heading>
-            </HStack>
-          </RouterLink>
-        </Box>
-
-        {/* User Authentication */}
+      <Flex
+        h={16}
+        alignItems="center"
+        justifyContent="space-between"
+        position="relative"
+        flexWrap="wrap"
+        pt={{ base: 12, md: 0 }}
+        pb={{ base: 2, md: 0 }}
+      >
+        <Flex alignItems="center" justifyContent={{ base: "center", md: "flex-start" }} flexWrap="wrap">
+          {/* Logo - colorful and kid-friendly */}
+          <Box>
+            <RouterLink to="/">
+              <HStack spacing={2}>
+                <Icon as={GiBrain} boxSize={8} color="yellow.300" />
+                <Heading
+                  size="lg"
+                  fontFamily="Montserrat Alternates"
+                  fontWeight="800"
+                  color="white"
+                  textShadow="1px 1px 2px rgba(0,0,0,0.3)"
+                >
+                  MiniMinds
+                </Heading>
+              </HStack>
+            </RouterLink>
+          </Box>
+          {/* Date and Time Display */}
+          <Box
+            ml={{ base: 0, md: 4 }}
+            mt={{ base: 2, md: 0 }}
+            textAlign={{ base: "center", md: "left" }}
+          >
+            {/* <Text
+              fontSize={{ base: "sm", md: "md" }}
+              fontWeight="bold"
+              color="white"
+              textShadow="1px 1px 2px rgba(0,0,0,0.3)"
+              whiteSpace="nowrap"
+            >
+              {formattedDate}
+            </Text>
+            <Text
+              fontSize={{ base: "xs", md: "sm" }}
+              color="whiteAlpha.800"
+              textShadow="1px 1px 2px rgba(0,0,0,0.3)"
+              whiteSpace="nowrap"
+            >
+              {formattedTime}
+            </Text> */}
+          </Box>
+        </Flex>
         <Flex alignItems="center" gap={3}>
           {isSignedIn ? (
             <Flex alignItems="center" gap={3}>
@@ -325,7 +379,7 @@ const Header = () => {
             </SignInButton>
           )}
         </Flex>
-      </Flex>
+        </Flex>
     </Box>
   );
 };
