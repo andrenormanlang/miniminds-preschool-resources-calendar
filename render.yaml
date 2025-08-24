@@ -8,7 +8,6 @@ services:
     plan: starter
     region: oregon
     buildCommand: docker build -t andrenormanlang/miniminds-backend .
-    startCommand: bun run start
     envVars:
       - key: NODE_ENV
         value: production
@@ -47,7 +46,6 @@ services:
     plan: starter
     region: oregon
     buildCommand: docker build -t andrenormanlang/miniminds-frontend .
-    startCommand: nginx -g 'daemon off;'
     envVars:
       - key: VITE_API_URL
         value: https://miniminds-backend.onrender.com
