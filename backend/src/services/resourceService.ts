@@ -83,7 +83,7 @@ export const createResource = async (
   // Ensure eventDate is properly formatted as ISO datetime
   const eventDate = data.eventDate
     ? new Date(data.eventDate).toISOString()
-    : undefined;
+    : new Date().toISOString(); // Default to current date if not provided
 
   return prisma.resource.create({
     data: {
@@ -144,13 +144,18 @@ export const updateResource = async (
   // Format the eventDate if it exists
   const eventDate = data.eventDate
     ? new Date(data.eventDate).toISOString()
-    : undefined;
+    : new Date().toISOString(); // Default to current date if not provided
 
   return prisma.resource.update({
     where: { id },
     data: {
-      ...data,
+      title: data.title,
+      type: data.type,
+      subject: data.subject,
+      ageGroup: data.ageGroup,
+      description: data.description,
       eventDate,
+      imageUrl: data.imageUrl,
       isApproved,
     },
     include: {

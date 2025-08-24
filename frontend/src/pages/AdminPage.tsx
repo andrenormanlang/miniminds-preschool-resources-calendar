@@ -28,15 +28,13 @@ import { Resource } from "../types/type";
 import EventForm from "../components/EventForm";
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import ModalCard from "../components/ModalCard";
-import { useAuthFetch } from '../utils/authUtils';
-
+import { useAuthFetch } from "../utils/authUtils";
 
 type FormData = {
   title: string;
   type: string;
   subject: string;
   ageGroup: string;
-  rating: number;
   description: string;
   eventDate: string;
   imageUrl: string;
@@ -55,7 +53,6 @@ const AdminPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { authFetch } = useAuthFetch();
 
-
   useEffect(() => {
     if (isSignedIn) {
       fetchUserResources();
@@ -66,7 +63,9 @@ const AdminPage = () => {
   // Replace your existing fetchUserResources with this:
   const fetchUserResources = async () => {
     try {
-      const data = await authFetch("http://localhost:4000/api/resources/admin/mine");
+      const data = await authFetch(
+        "http://localhost:4000/api/resources/admin/mine"
+      );
       setUserResources(data);
     } catch (error) {
       console.error("Failed to fetch resources:", error);
@@ -78,16 +77,6 @@ const AdminPage = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getToken = async () => {
-    if (!isSignedIn) return null;
-    try {
-      return await user?.getToken();
-    } catch (error) {
-      console.error("Error getting auth token:", error);
-      return null;
     }
   };
 
@@ -111,18 +100,18 @@ const AdminPage = () => {
   const handleDeleteResource = async (resourceId: number) => {
     try {
       await authFetch(`http://localhost:4000/api/resources/${resourceId}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
-      
+
       // Remove resource from the list
       setUserResources(userResources.filter((r) => r.id !== resourceId));
-      
+
       toast({
         title: "Resource deleted",
         status: "success",
         duration: 3000,
       });
-      
+
       onClose(); // Close modal if open
     } catch (error) {
       console.error(error);
@@ -137,44 +126,30 @@ const AdminPage = () => {
 
   const handleFormSubmit = async (data: FormData) => {
     try {
-      const token = await getToken();
-      if (!token) {
-        throw new Error("Authentication token required");
-      }
-
-      let response;
+      let updatedResource;
 
       if (isEditMode && selectedResource) {
         // Update existing resource
-        response = await fetch(
+        updatedResource = await authFetch(
           `http://localhost:4000/api/resources/${selectedResource.id}`,
           {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(data),
           }
         );
       } else {
         // Create new resource
-        response = await fetch("http://localhost:4000/api/resources", {
+        updatedResource = await authFetch("http://localhost:4000/api/resources", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(data),
         });
       }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save resource");
-      }
-
-      const updatedResource = await response.json();
 
       if (isEditMode) {
         setUserResources((resources) =>
@@ -192,7 +167,7 @@ const AdminPage = () => {
         setUserResources((resources) => [...resources, updatedResource]);
         toast({
           title: "Resource created",
-          description: isEditMode ? "" : "Your resource is pending approval",
+          description: "Your resource is pending approval",
           status: "success",
           duration: 3000,
         });
@@ -338,6 +313,8 @@ const AdminPage = () => {
           onClose={onClose}
           onEdit={() => handleEditResource(selectedResource)}
           onDelete={() => handleDeleteResource(selectedResource.id)}
+          canEdit={true}
+          canDelete={true}
         />
       )}
     </Box>

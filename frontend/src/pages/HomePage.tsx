@@ -57,6 +57,7 @@ import { EventFormData, Resource } from "../types/type";
 import Loading from "../components/Loading";
 import { useResourceApi } from "../services/api";
 import { FaUsers, FaGraduationCap, FaBookOpen } from "react-icons/fa";
+import FloatingAIButton from "../components/FloatingAIButton";
 
 // Function to get a random color for the cards
 const getRandomColor = () => {
@@ -400,7 +401,6 @@ const HomePage = () => {
     const payload = {
       ...data,
       eventDate: isoFormattedDate,
-      rating: 0, // Default value since it's required by Resource but not by the form
       isApproved: false, // Default value for new resources
     };
 
@@ -1090,6 +1090,9 @@ const HomePage = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {/* AI Assistant Floating Button */}
+      <FloatingAIButton />
     </Box>
   );
 };
