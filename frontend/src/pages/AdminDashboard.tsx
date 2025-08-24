@@ -203,12 +203,9 @@ const AdminDashboard = () => {
 
   const handleRejectResource = async (resourceId: number) => {
     try {
-      await authFetch(
-        `/api/resources/${resourceId}/reject`,
-        {
-          method: "PUT",
-        }
-      );
+      await authFetch(`/api/resources/${resourceId}/reject`, {
+        method: "PUT",
+      });
 
       toast({
         title: "Resource Rejected",

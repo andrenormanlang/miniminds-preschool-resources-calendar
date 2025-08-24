@@ -45,14 +45,11 @@ const SuperAdminPage = () => {
         throw new Error("Authentication token required");
       }
 
-      const response = await fetch(
-        "/api/resources/admin/pending",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch("/api/resources/admin/pending", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch pending resources");

@@ -63,9 +63,7 @@ const AdminPage = () => {
   // Replace your existing fetchUserResources with this:
   const fetchUserResources = async () => {
     try {
-      const data = await authFetch(
-        "/api/resources/admin/mine"
-      );
+      const data = await authFetch("/api/resources/admin/mine");
       setUserResources(data);
     } catch (error) {
       console.error("Failed to fetch resources:", error);
