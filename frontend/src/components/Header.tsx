@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Flex,
-  Heading,
   Tag,
   Menu,
   MenuButton,
@@ -18,16 +17,15 @@ import {
 import { FiChevronDown, FiMoreVertical } from "react-icons/fi";
 import {
   GiBookshelf,
-  GiBrain,
   GiCrown,
   GiStarFormation,
   GiGraduateCap,
 } from "react-icons/gi";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
 import { useAuthFetch } from "../utils/authUtils";
 import { MdDashboard } from "react-icons/md";
+import Logo from "./Logo";
 
 const Header = () => {
   const { isSignedIn, user } = useUser();
@@ -128,23 +126,16 @@ const Header = () => {
         pb={{ base: 2, md: 0 }}
       >
         <Flex alignItems="center" justifyContent={{ base: "center", md: "flex-start" }} flexWrap="wrap">
-          {/* Logo - colorful and kid-friendly */}
-          <Box>
-            <RouterLink to="/">
-              <HStack spacing={2}>
-                <Icon as={GiBrain} boxSize={8} color="yellow.300" />
-                <Heading
-                  size="lg"
-                  fontFamily="Montserrat Alternates"
-                  fontWeight="800"
-                  color="white"
-                  textShadow="1px 1px 2px rgba(0,0,0,0.3)"
-                >
-                  MiniMinds
-                </Heading>
-              </HStack>
-            </RouterLink>
-          </Box>
+          {/* Enhanced Logo with modern sans-serif font */}
+          <Logo 
+            size="md"
+            variant="default"
+            showIcon={true}
+            showTagline={false}
+            color="white"
+            iconColor="yellow.300"
+            to="/"
+          />
           {/* Date and Time Display */}
           <Box
             ml={{ base: 0, md: 4 }}

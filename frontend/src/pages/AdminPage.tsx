@@ -142,13 +142,16 @@ const AdminPage = () => {
         );
       } else {
         // Create new resource
-        updatedResource = await authFetch("http://localhost:4000/api/resources", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
+        updatedResource = await authFetch(
+          "http://localhost:4000/api/resources",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          }
+        );
       }
 
       if (isEditMode) {

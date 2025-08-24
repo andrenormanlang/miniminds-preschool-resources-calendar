@@ -61,7 +61,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, onClose }) => {
       const welcomeMessage: Message = {
         id: "welcome",
         content:
-          "Hi! I'm your MiniMinds AI Assistant! 🧠✨ I'm here to help you with early childhood education. You can ask me about:\n\n• Activity ideas for different age groups\n• Learning objectives and development\n• Educational games and crafts\n• Safety tips for activities\n• Age-appropriate learning strategies\n\nWhat would you like to know?",
+          "Hi! I'm your Mini Minds AI Assistant! 🧠✨ I'm here to help you with early childhood education. You can ask me about:\n\n• Activity ideas for different age groups\n• Learning objectives and development\n• Educational games and crafts\n• Safety tips for activities\n• Age-appropriate learning strategies\n\nWhat would you like to know?",
         role: "assistant",
         timestamp: new Date(),
       };
@@ -157,7 +157,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, onClose }) => {
             />
             <VStack align="start" spacing={0}>
               <Text fontWeight="bold" fontSize="lg">
-                MiniMinds AI Assistant
+                Mini Minds AI Assistant
               </Text>
               <Badge colorScheme="green" size="sm">
                 Online

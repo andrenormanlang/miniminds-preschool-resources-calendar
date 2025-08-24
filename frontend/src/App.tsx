@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import { ChakraProvider } from "@chakra-ui/react";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
@@ -106,55 +105,64 @@ const App = () => {
   }
 
   return (
-    <ChakraProvider>
-      <Router>
-        <Header />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
+    <Router>
+      <Header />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
 
-          {/* Admin route for resource management */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
+        {/* Admin route for resource management */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-          {/* SuperAdmin route for approvals */}
-          <Route
-            path="/superadmin"
-            element={
-              <ProtectedRoute allowedRoles={["superAdmin"]}>
-                <SuperAdminPage />
-              </ProtectedRoute>
-            }
-          />
+        {/* SuperAdmin route for approvals */}
+        <Route
+          path="/superadmin"
+          element={
+            <ProtectedRoute allowedRoles={["superAdmin"]}>
+              <SuperAdminPage />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
-        </Routes>
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      </Routes>
 
-        {/* Global Message Display for Errors */}
-        {error && (
-          <Box
-            position="fixed"
-            bottom={4}
-            right={4}
-            bg="red.500"
-            color="white"
-            p={3}
-            borderRadius="md"
-            boxShadow="lg"
+      {/* Global Message Display for Errors */}
+      {error && (
+        <Box
+          position="fixed"
+          bottom={4}
+          right={4}
+          bg="error.500"
+          color="white"
+          p={4}
+          borderRadius="2xl"
+          boxShadow="xl"
+          border="2px solid"
+          borderColor="error.300"
+          backdropFilter="blur(8px)"
+        >
+          {error}
+          <Button 
+            size="sm" 
+            ml={3} 
+            onClick={() => setError(null)}
+            variant="playful"
+            bg="white"
+            color="error.600"
+            _hover={{ bg: "gray.100" }}
           >
-            {error}
-            <Button size="sm" ml={2} onClick={() => setError(null)}>
-              Close
-            </Button>
-          </Box>
-        )}
-      </Router>
-    </ChakraProvider>
+            Close
+          </Button>
+        </Box>
+      )}
+    </Router>
   );
 };
 

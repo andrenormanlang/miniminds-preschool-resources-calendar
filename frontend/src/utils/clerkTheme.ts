@@ -1,77 +1,138 @@
-// Clerk theme configuration for styling the UserButton and dropdown
-// This can be imported and applied to ClerkProvider in your main App file
+// Clerk theme configuration for preschool learning platform
+// Child-friendly and warm styling for the UserButton and dropdown
 
 const clerkAppearance = {
   elements: {
-    // Avatar styling - larger with no background
+    // Avatar styling - larger with friendly border
     userButtonAvatarBox: {
-      width: "42px",
-      height: "42px",
+      width: "44px",
+      height: "44px",
       backgroundColor: "transparent",
+      border: "2px solid #1890FF",
+      borderRadius: "50%",
+      transition: "all 0.2s ease",
     },
     userButtonTrigger: {
-      padding: "0",
+      padding: "2px",
       border: "none",
+      borderRadius: "50%",
+      "&:hover": {
+        transform: "scale(1.05)",
+      },
     },
     // Avatar image itself
     userButtonAvatarImage: {
       width: "100%",
       height: "100%",
       objectFit: "cover",
+      borderRadius: "50%",
     },
 
-    // Dropdown card styling
+    // Dropdown card styling - more playful and rounded
     userButtonPopoverCard: {
-      border: "1px solid",
-      borderColor: "rgba(229, 231, 235, 1)",
+      border: "2px solid",
+      borderColor: "#E6F7FF",
       boxShadow:
-        "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-      borderRadius: "8px",
-      padding: "12px 0",
+        "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      borderRadius: "16px",
+      padding: "16px 0",
+      backgroundColor: "#F0F8FF",
     },
 
     // User info section in dropdown
     userButtonPopoverActionButtonText: {
-      fontSize: "14px",
-      fontWeight: "500",
+      fontSize: "15px",
+      fontWeight: "600",
+      fontFamily: '"Open Sans", "Nunito", sans-serif',
     },
 
-    // Dropdown options
+    // Dropdown options - more playful hover effects
     userButtonPopoverActionButton: {
-      padding: "12px 16px",
-      transition: "all 0.2s ease",
-      fontSize: "14px",
+      padding: "14px 20px",
+      transition: "all 0.3s ease",
+      fontSize: "15px",
       fontWeight: "500",
-      marginBottom: "2px",
+      marginBottom: "4px",
+      borderRadius: "12px",
+      margin: "0 8px",
+      fontFamily: '"Open Sans", "Nunito", sans-serif',
 
-      // Enhanced hover effect
+      // Enhanced hover effect with preschool colors
       "&:hover": {
-        backgroundColor: "rgba(124, 58, 237, 0.1)", // Purple tint on hover
-        color: "rgba(124, 58, 237, 1)",
-        transform: "translateX(4px)",
+        backgroundColor: "#E6F7FF",
+        color: "#1890FF",
+        transform: "translateX(6px) scale(1.02)",
+        boxShadow: "0 4px 12px rgba(24, 144, 255, 0.15)",
       },
     },
 
-    // Icons in dropdown
+    // Icons in dropdown - friendly blue
     userButtonPopoverActionButtonIcon: {
-      width: "20px",
-      height: "20px",
-      marginRight: "14px",
-      color: "rgba(124, 58, 237, 0.8)", // Purple-tinted icons
+      width: "22px",
+      height: "22px",
+      marginRight: "16px",
+      color: "#1890FF",
+      transition: "all 0.2s ease",
     },
 
     // Footer in dropdown
     userButtonPopoverFooter: {
+      padding: "16px 20px",
+      borderTop: "2px solid #E6F7FF",
+      marginTop: "8px",
+      borderRadius: "0 0 16px 16px",
+    },
+
+    // Sign in/up forms styling
+    formButtonPrimary: {
+      backgroundColor: "#1890FF",
+      borderRadius: "12px",
+      fontSize: "16px",
+      fontWeight: "600",
+      padding: "12px 24px",
+      transition: "all 0.2s ease",
+      "&:hover": {
+        backgroundColor: "#096DD9",
+        transform: "translateY(-2px)",
+        boxShadow: "0 8px 16px rgba(24, 144, 255, 0.3)",
+      },
+    },
+
+    // Input fields
+    formFieldInput: {
+      borderRadius: "12px",
+      border: "2px solid #E6F7FF",
+      fontSize: "15px",
       padding: "12px 16px",
-      borderTop: "1px solid rgba(229, 231, 235, 1)",
-      marginTop: "6px",
+      fontFamily: '"Open Sans", "Nunito", sans-serif',
+      "&:focus": {
+        borderColor: "#1890FF",
+        boxShadow: "0 0 0 3px rgba(24, 144, 255, 0.1)",
+      },
+    },
+
+    // Labels
+    formFieldLabel: {
+      fontSize: "14px",
+      fontWeight: "600",
+      color: "#374151",
+      fontFamily: '"Open Sans", "Nunito", sans-serif',
     },
   },
   variables: {
-    colorPrimary: "rgba(124, 58, 237, 1)", // Purple primary color
-    colorText: "rgba(55, 65, 81, 1)",
-    colorTextSecondary: "rgba(107, 114, 128, 1)",
-    fontFamily: "inherit",
+    colorPrimary: "#1890FF", // Friendly blue primary color
+    colorSuccess: "#2E8B57", // Nature green for success
+    colorWarning: "#FFD700", // Sunny yellow for warnings
+    colorDanger: "#FF4757", // Soft red for errors
+    colorText: "#374151", // Warm dark gray
+    colorTextSecondary: "#6B7280", // Medium gray
+    colorBackground: "#F0F8FF", // Alice blue background
+    colorInputBackground: "#FFFFFF", // White input backgrounds
+    colorInputText: "#374151", // Dark text in inputs
+    fontFamily: '"Open Sans", "Nunito", sans-serif',
+    fontSize: "15px",
+    fontWeight: "500",
+    borderRadius: "12px",
   },
 };
 

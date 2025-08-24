@@ -4,9 +4,9 @@
 
 ![MiniMinds Banner](https://via.placeholder.com/800x200/6B46C1/FFFFFF?text=MiniMinds:+Preschool+Learning+Resources)
 
-## 🌟 About MiniMinds
+## 🌟 About Mini Minds
 
-MiniMinds is a platform designed to connect educators and parents with  preschool learning resources. 🔍
+Mini Minds is a platform designed to connect educators and parents with  preschool learning resources. 🔍
 
 ## ✨ Features
 
@@ -157,12 +157,12 @@ MiniMinds is a platform designed to connect educators and parents with  preschoo
 
 ### 🔐 Required API Keys
 
-| Service | Purpose | How to Get |
-|---------|---------|------------|
-| **Clerk** | Authentication | [clerk.com](https://clerk.com) - Create account and get keys |
-| **Cloudinary** | Image uploads | [cloudinary.com](https://cloudinary.com) - Free tier available |
-| **Google Gemini** | AI features | [Google AI Studio](https://makersuite.google.com/app/apikey) |
-| **PostgreSQL** | Database | [Neon](https://neon.tech) or any PostgreSQL provider |
+| Service           | Purpose        | How to Get                                                     |
+| ----------------- | -------------- | -------------------------------------------------------------- |
+| **Clerk**         | Authentication | [clerk.com](https://clerk.com) - Create account and get keys   |
+| **Cloudinary**    | Image uploads  | [cloudinary.com](https://cloudinary.com) - Free tier available |
+| **Google Gemini** | AI features    | [Google AI Studio](https://makersuite.google.com/app/apikey)   |
+| **PostgreSQL**    | Database       | [Neon](https://neon.tech) or any PostgreSQL provider           |
 
 **⚠️ Security Note**: Never commit your `.env` files to Git. Only use `.env.example` templates.
 

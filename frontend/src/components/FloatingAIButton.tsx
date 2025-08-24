@@ -16,7 +16,7 @@ const FloatingAIButton: React.FC = () => {
   return (
     <>
       <Box position="fixed" bottom="20px" right="20px" zIndex={1000}>
-        <Tooltip label="Ask MiniMinds AI Assistant" placement="left" hasArrow>
+        <Tooltip label="Ask Mini Minds AI Assistant" placement="left" hasArrow>
           <IconButton
             aria-label="Open AI Assistant"
             icon={<FaBrain />}
