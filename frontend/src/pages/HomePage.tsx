@@ -181,6 +181,15 @@ const HomePage = () => {
   const filteredAndSortedResources = React.useMemo(() => {
     let filtered = [...resources];
 
+    // Filter out events that have already passed (only show current and future events)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of day for accurate comparison
+    filtered = filtered.filter((resource) => {
+      const eventDate = new Date(resource.eventDate);
+      eventDate.setHours(0, 0, 0, 0); // Set to beginning of day for accurate comparison
+      return eventDate >= today;
+    });
+
     // Check URL parameters for filter=mine
     const filterParam = searchParams.get("filter");
     if (filterParam === "mine" && currentUser) {
@@ -870,11 +879,17 @@ const HomePage = () => {
                             borderWidth="1px"
                             borderRadius="lg"
                             overflow="hidden"
-                            boxShadow={snapshot.isDragging ? "0 0 20px rgba(0,0,0,0.3)" : "md"}
+                            boxShadow={
+                              snapshot.isDragging
+                                ? "0 0 20px rgba(0,0,0,0.3)"
+                                : "md"
+                            }
                             position="relative"
                             bg={resourceColors[resource.id] || "white"}
                             transition="transform 0.3s, box-shadow 0.3s, background-color 0.2s"
-                            transform={snapshot.isDragging ? "scale(1.05)" : "scale(1)"}
+                            transform={
+                              snapshot.isDragging ? "scale(1.05)" : "scale(1)"
+                            }
                             _hover={{
                               transform: "translateY(-5px)",
                               boxShadow: "xl",
