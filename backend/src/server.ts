@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import chalk from "chalk";
+import path from "path";
 import resourceRoutes from "./routes/resources.js";
 import userRoutes from "./routes/users.js";
 import aiRoutes from "./routes/ai.js";
@@ -28,6 +29,24 @@ app.use(morgan("dev"));
 app.use("/api/resources", resourceRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/ai", aiRoutes);
+
+// Serve static files from the frontend build (for combined deployment)
+const publicPath = path.join(process.cwd(), "public");
+app.use(express.static(publicPath));
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", message: "MiniMinds API is running" });
+});
+
+// Catch-all handler: send back React's index.html file for any non-API routes
+app.get("*", (req, res) => {
+  if (!req.path.startsWith("/api")) {
+    res.sendFile(path.join(publicPath, "index.html"));
+  } else {
+    res.status(404).json({ message: "API endpoint not found" });
+  }
+});
 
 // Webhook route
 // Modify the webhook route (lines ~87-128)
