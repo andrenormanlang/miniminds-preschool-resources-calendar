@@ -85,7 +85,88 @@ MiniMinds is a platform designed to connect educators and parents with  preschoo
 - Manage user accounts and permissions
 - Access the admin dashboard for site oversight
 
-## 📸 Screenshots
+## � Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- PostgreSQL database
+- Clerk account for authentication
+- Cloudinary account for image uploads
+- Google Gemini API key for AI features
+
+### Environment Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/andrenormanlang/inl5_andre_lang.git
+   cd miniminds
+   ```
+
+2. **Backend Setup**
+   ```bash
+   cd backend
+   npm install
+   ```
+   
+   Copy the environment template and fill in your values:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `backend/.env` with your actual credentials:
+   - `DATABASE_URL`: Your PostgreSQL connection string
+   - `CLOUDINARY_*`: Your Cloudinary credentials
+   - `GEMINI_API_KEY`: Your Google Gemini API key
+   - `CLERK_*`: Your Clerk authentication keys
+
+3. **Frontend Setup**
+   ```bash
+   cd frontend
+   bun install
+   ```
+   
+   Copy the environment template and fill in your values:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `frontend/.env` with your actual credentials:
+   - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key
+
+4. **Database Setup**
+   ```bash
+   cd backend
+   npx prisma migrate deploy
+   npx prisma generate
+   ```
+
+5. **Start the application**
+   
+   Backend (terminal 1):
+   ```bash
+   cd backend
+   npm run dev
+   ```
+   
+   Frontend (terminal 2):
+   ```bash
+   cd frontend
+   bun dev
+   ```
+
+### 🔐 Required API Keys
+
+| Service | Purpose | How to Get |
+|---------|---------|------------|
+| **Clerk** | Authentication | [clerk.com](https://clerk.com) - Create account and get keys |
+| **Cloudinary** | Image uploads | [cloudinary.com](https://cloudinary.com) - Free tier available |
+| **Google Gemini** | AI features | [Google AI Studio](https://makersuite.google.com/app/apikey) |
+| **PostgreSQL** | Database | [Neon](https://neon.tech) or any PostgreSQL provider |
+
+**⚠️ Security Note**: Never commit your `.env` files to Git. Only use `.env.example` templates.
+
+## �📸 Screenshots
 
 ![Home Page](https://via.placeholder.com/400x300?text=Colorful+Home+Page)
 ![Resource Details](https://via.placeholder.com/400x300?text=Resource+Details)
