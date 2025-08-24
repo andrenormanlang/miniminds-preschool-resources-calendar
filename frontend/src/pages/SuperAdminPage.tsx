@@ -46,7 +46,7 @@ const SuperAdminPage = () => {
       }
 
       const response = await fetch(
-        "http://localhost:4000/api/resources/admin/pending",
+        "/api/resources/admin/pending",
         {
           headers: {
             Authorization: `Bearer ${token}`,

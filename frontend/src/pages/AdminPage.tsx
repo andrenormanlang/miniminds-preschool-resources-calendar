@@ -64,7 +64,7 @@ const AdminPage = () => {
   const fetchUserResources = async () => {
     try {
       const data = await authFetch(
-        "http://localhost:4000/api/resources/admin/mine"
+        "/api/resources/admin/mine"
       );
       setUserResources(data);
     } catch (error) {
@@ -99,7 +99,7 @@ const AdminPage = () => {
 
   const handleDeleteResource = async (resourceId: number) => {
     try {
-      await authFetch(`http://localhost:4000/api/resources/${resourceId}`, {
+      await authFetch(`/api/resources/${resourceId}`, {
         method: "DELETE",
       });
 

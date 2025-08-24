@@ -165,7 +165,7 @@ const AdminDashboard = () => {
 
       // Call the correct API endpoint
       const updatedResource = await authFetch(
-        `http://localhost:4000/api/resources/${resourceId}/approve`,
+        `/api/resources/${resourceId}/approve`,
         {
           method: "PATCH",
           headers: {
@@ -204,7 +204,7 @@ const AdminDashboard = () => {
   const handleRejectResource = async (resourceId: number) => {
     try {
       await authFetch(
-        `http://localhost:4000/api/resources/${resourceId}/reject`,
+        `/api/resources/${resourceId}/reject`,
         {
           method: "PUT",
         }
