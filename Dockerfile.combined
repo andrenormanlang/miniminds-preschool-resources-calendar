@@ -12,6 +12,9 @@ RUN bun run build
 # Main stage - Backend with frontend served statically
 FROM oven/bun:1
 
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl
+
 WORKDIR /app
 
 # Copy backend files
@@ -19,6 +22,9 @@ COPY backend/package.json backend/bun.lockb ./
 RUN bun install
 
 COPY backend/ .
+
+# Build the TypeScript backend
+RUN bun run build
 
 # Copy built frontend to backend's public directory
 RUN mkdir -p public
