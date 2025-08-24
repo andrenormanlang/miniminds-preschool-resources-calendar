@@ -12,7 +12,6 @@ import Loading from "./components/Loading";
 import { useState } from "react";
 import AdminDashboard from "./pages/AdminDashboard";
 import { useAuthFetch } from "./utils/authUtils";
-import ClerkDebugInfo from "./components/ClerkDebugInfo";
 
 const App = () => {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -27,7 +26,7 @@ const App = () => {
       if (isSignedIn && user) {
         try {
           // Use the user ID directly
-          const response = await fetch("http://localhost:4000/api/users/sync", {
+          const response = await fetch("/api/users/sync", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -105,7 +104,6 @@ const App = () => {
 
   return (
     <Router>
-      <ClerkDebugInfo />
       <Header />
       <Routes>
         <Route path="/" element={<HomePage />} />
