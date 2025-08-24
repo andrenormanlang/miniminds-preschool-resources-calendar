@@ -1,0 +1,38 @@
+# Development Docker Compose for testing combined image
+version: '3.8'
+
+services:
+  miniminds-combined:
+    build:
+      context: .
+      dockerfile: Dockerfile.combined
+      args:
+        - VITE_API_URL=http://localhost:4000
+        - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/miniminds_dev
+      - DIRECT_URL=postgresql://postgres:postgres@db:5432/miniminds_dev
+    depends_on:
+      - db
+    volumes:
+      - ./backend/prisma:/app/prisma
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=miniminds_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
