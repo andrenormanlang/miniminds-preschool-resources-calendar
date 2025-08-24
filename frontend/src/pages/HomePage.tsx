@@ -566,8 +566,12 @@ const HomePage = () => {
               <Input
                 placeholder="Search resources..."
                 bg="blue.900"
+                color="white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                _placeholder={{
+                  color: "purple.300",
+                }}
                 _focus={{
                   borderColor: "purple.300",
                   boxShadow: "0 0 0 1px purple.300",
