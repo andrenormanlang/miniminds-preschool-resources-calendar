@@ -18,7 +18,16 @@ const app = express();
 const prisma = new PrismaClient();
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://miniminds-frontend.onrender.com",
+    process.env.FRONTEND_URL,
+  ].filter((url): url is string => Boolean(url)),
+  credentials: true,
+};
+app.use(cors(corsOptions));
 // Special handling for webhook route to preserve raw body
 app.use("/api/webhooks", bodyParser.raw({ type: "application/json" }));
 // Standard JSON parsing for all other routes

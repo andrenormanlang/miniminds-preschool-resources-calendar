@@ -13,6 +13,14 @@ RUN bun install
 # Copy source code
 COPY . .
 
+# Build-time environment variables
+ARG VITE_API_URL
+ARG VITE_CLERK_PUBLISHABLE_KEY
+
+# Set environment variables for the build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+
 # Build the application
 RUN bun run build
 

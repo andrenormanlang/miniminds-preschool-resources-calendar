@@ -16,6 +16,13 @@ export const useAuthFetch = () => {
         // Get token or just use user ID directly
         const token = user.id; // Using Clerk user ID as the token
 
+        // Use the configured API URL base
+        const baseUrl =
+          import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+        const fullUrl = url.startsWith("http")
+          ? url
+          : `${baseUrl.replace("/api", "")}${url}`;
+
         // Set up headers with authorization
         const headers = {
           "Content-Type": "application/json",
@@ -24,7 +31,7 @@ export const useAuthFetch = () => {
         };
 
         // Make the fetch request
-        const response = await fetch(url, {
+        const response = await fetch(fullUrl, {
           ...options,
           headers,
           body: options.body,

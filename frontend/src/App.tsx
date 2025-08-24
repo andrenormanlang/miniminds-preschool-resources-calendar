@@ -12,6 +12,7 @@ import Loading from "./components/Loading";
 import { useState } from "react";
 import AdminDashboard from "./pages/AdminDashboard";
 import { useAuthFetch } from "./utils/authUtils";
+import ClerkDebugInfo from "./components/ClerkDebugInfo";
 
 const App = () => {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -63,9 +64,7 @@ const App = () => {
       // Mark that we've started syncing
       hasSyncedRef.current = true;
 
-      const backendUser = await authFetch(
-        "http://localhost:4000/api/users/current"
-      );
+      const backendUser = await authFetch("/api/users/current");
 
       if (backendUser && backendUser.role) {
         try {
@@ -106,6 +105,7 @@ const App = () => {
 
   return (
     <Router>
+      <ClerkDebugInfo />
       <Header />
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -149,9 +149,9 @@ const App = () => {
           backdropFilter="blur(8px)"
         >
           {error}
-          <Button 
-            size="sm" 
-            ml={3} 
+          <Button
+            size="sm"
+            ml={3}
             onClick={() => setError(null)}
             variant="playful"
             bg="white"

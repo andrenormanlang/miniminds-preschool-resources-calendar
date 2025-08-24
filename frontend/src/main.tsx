@@ -13,7 +13,13 @@ import preschoolTheme from "./theme/preschoolTheme";
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!clerkPubKey) {
-  throw new Error("Missing Publishable Key");
+  console.error("❌ VITE_CLERK_PUBLISHABLE_KEY is missing!");
+  console.error("Available env vars:", Object.keys(import.meta.env));
+  console.error("🔧 Fix this by:");
+  console.error("1. Setting VITE_CLERK_PUBLISHABLE_KEY in your environment");
+  console.error("2. Making sure it's available at build time");
+  console.error("3. Checking your Clerk dashboard for the correct key");
+  throw new Error("Missing Publishable Key - Check console for details");
 }
 
 // Create a client
