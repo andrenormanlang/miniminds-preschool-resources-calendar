@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useUser } from '@clerk/clerk-react';
-import { useToast } from '@chakra-ui/react';
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { useUser, useAuth } from "@clerk/clerk-react";
+import { useToast } from "@chakra-ui/react";
 
 interface ResourceApprovalContextType {
   approveResource: (resourceId: number) => Promise<boolean>;
@@ -8,22 +8,17 @@ interface ResourceApprovalContextType {
   isProcessing: boolean;
 }
 
-const ResourceApprovalContext = createContext<ResourceApprovalContextType | undefined>(undefined);
+const ResourceApprovalContext = createContext<
+  ResourceApprovalContextType | undefined
+>(undefined);
 
-export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { user, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const toast = useToast();
-
-  const getToken = async () => {
-    if (!isSignedIn) return null;
-    try {
-      return await user?.getToken();
-    } catch (error) {
-      console.error("Error getting auth token:", error);
-      return null;
-    }
-  };
 
   const approveResource = async (resourceId: number): Promise<boolean> => {
     setIsProcessing(true);
@@ -33,18 +28,21 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({ ch
         throw new Error("Authentication token required");
       }
 
-      const response = await fetch(`http://localhost:4000/api/resources/${resourceId}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ approve: true })
-      });
+      const response = await fetch(
+        `http://localhost:4000/api/resources/${resourceId}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ approve: true }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to approve resource');
+        throw new Error(errorData.message || "Failed to approve resource");
       }
 
       toast({
@@ -52,7 +50,7 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({ ch
         status: "success",
         duration: 3000,
       });
-      
+
       return true;
     } catch (error) {
       console.error(error);
@@ -76,18 +74,21 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({ ch
         throw new Error("Authentication token required");
       }
 
-      const response = await fetch(`http://localhost:4000/api/resources/${resourceId}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ approve: false })
-      });
+      const response = await fetch(
+        `http://localhost:4000/api/resources/${resourceId}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ approve: false }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to reject resource');
+        throw new Error(errorData.message || "Failed to reject resource");
       }
 
       toast({
@@ -95,7 +96,7 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({ ch
         status: "info",
         duration: 3000,
       });
-      
+
       return true;
     } catch (error) {
       console.error(error);
@@ -112,7 +113,9 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({ ch
   };
 
   return (
-    <ResourceApprovalContext.Provider value={{ approveResource, rejectResource, isProcessing }}>
+    <ResourceApprovalContext.Provider
+      value={{ approveResource, rejectResource, isProcessing }}
+    >
       {children}
     </ResourceApprovalContext.Provider>
   );
@@ -121,7 +124,9 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({ ch
 export const useResourceApproval = () => {
   const context = useContext(ResourceApprovalContext);
   if (context === undefined) {
-    throw new Error('useResourceApproval must be used within a ResourceApprovalProvider');
+    throw new Error(
+      "useResourceApproval must be used within a ResourceApprovalProvider"
+    );
   }
   return context;
 };

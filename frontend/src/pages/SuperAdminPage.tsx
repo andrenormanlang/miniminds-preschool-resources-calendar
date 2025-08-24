@@ -1,11 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
-  Box, Heading, Table, Thead, Tbody, Tr, Th, Td,
-  Button, Badge, useToast, Flex, Text, Tabs, TabList, Tab, TabPanels, TabPanel
-} from '@chakra-ui/react';
-import { useUser } from '@clerk/clerk-react';
-import Loading from '../components/Loading';
-import { Resource, User } from '../types/type';
+  Box,
+  Heading,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Button,
+  Badge,
+  useToast,
+  Flex,
+  Text,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+} from "@chakra-ui/react";
+import { useUser, useAuth } from "@clerk/clerk-react";
+import Loading from "../components/Loading";
+import { Resource, User } from "../types/type";
 
 const SuperAdminPage = () => {
   const [pendingResources, setPendingResources] = useState<Resource[]>([]);
@@ -13,6 +29,7 @@ const SuperAdminPage = () => {
   const [loading, setLoading] = useState(true);
   const toast = useToast();
   const { user, isSignedIn } = useUser();
+  const { getToken } = useAuth();
 
   useEffect(() => {
     if (isSignedIn) {
@@ -21,33 +38,26 @@ const SuperAdminPage = () => {
     }
   }, [isSignedIn]);
 
-  const getToken = async () => {
-    if (!isSignedIn) return null;
-    try {
-      return await user?.getToken();
-    } catch (error) {
-      console.error("Error getting auth token:", error);
-      return null;
-    }
-  };
-
   const fetchPendingResources = async () => {
     try {
       const token = await getToken();
       if (!token) {
         throw new Error("Authentication token required");
       }
-      
-      const response = await fetch('http://localhost:4000/api/resources/admin/pending', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+
+      const response = await fetch(
+        "http://localhost:4000/api/resources/admin/pending",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      
+      );
+
       if (!response.ok) {
         throw new Error("Failed to fetch pending resources");
       }
-      
+
       const data = await response.json();
       setPendingResources(data);
     } catch (error) {
@@ -70,17 +80,17 @@ const SuperAdminPage = () => {
       if (!token) {
         throw new Error("Authentication token required");
       }
-      
-      const response = await fetch('http://localhost:4000/api/users', {
+
+      const response = await fetch("http://localhost:4000/api/users", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch users");
       }
-      
+
       const data = await response.json();
       setUsers(data);
     } catch (error) {
@@ -101,25 +111,28 @@ const SuperAdminPage = () => {
       if (!token) {
         throw new Error("Authentication token required");
       }
-      
-      const response = await fetch(`http://localhost:4000/api/resources/${id}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ approve })
-      });
-      
+
+      const response = await fetch(
+        `http://localhost:4000/api/resources/${id}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ approve }),
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to update resource approval status");
       }
-      
+
       // Remove from pending list
-      setPendingResources(prevResources => 
-        prevResources.filter(resource => resource.id !== id)
+      setPendingResources((prevResources) =>
+        prevResources.filter((resource) => resource.id !== id)
       );
-      
+
       toast({
         title: approve ? "Resource approved" : "Resource rejected",
         status: approve ? "success" : "info",
@@ -142,23 +155,28 @@ const SuperAdminPage = () => {
       if (!token) {
         throw new Error("Authentication token required");
       }
-      
-      const response = await fetch(`http://localhost:4000/api/users/${id}/approve`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`
+
+      const response = await fetch(
+        `http://localhost:4000/api/users/${id}/approve`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      
+      );
+
       if (!response.ok) {
         throw new Error("Failed to approve user");
       }
-      
+
       // Update user in the list
-      setUsers(users.map(user => 
-        user.id === id ? { ...user, isApproved: true } : user
-      ));
-      
+      setUsers(
+        users.map((user) =>
+          user.id === id ? { ...user, isApproved: true } : user
+        )
+      );
+
       toast({
         title: "User approved",
         status: "success",
@@ -181,25 +199,32 @@ const SuperAdminPage = () => {
       if (!token) {
         throw new Error("Authentication token required");
       }
-      
-      const response = await fetch(`http://localhost:4000/api/users/${id}/role`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ role: newRole })
-      });
-      
+
+      const response = await fetch(
+        `http://localhost:4000/api/users/${id}/role`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ role: newRole }),
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to update role");
       }
-      
+
       // Update user in the list
-      setUsers(users.map(user => 
-        user.id === id ? { ...user, role: newRole as 'user' | 'admin' | 'superAdmin' } : user
-      ));
-      
+      setUsers(
+        users.map((user) =>
+          user.id === id
+            ? { ...user, role: newRole as "user" | "admin" | "superAdmin" }
+            : user
+        )
+      );
+
       toast({
         title: "Role updated",
         status: "success",
@@ -222,20 +247,24 @@ const SuperAdminPage = () => {
 
   return (
     <Box p={8}>
-      <Heading mb={6} color="purple.700">Super Admin Dashboard</Heading>
-      
+      <Heading mb={6} color="purple.700">
+        Super Admin Dashboard
+      </Heading>
+
       <Tabs variant="enclosed" colorScheme="purple">
         <TabList>
           <Tab>Pending Resources</Tab>
           <Tab>User Management</Tab>
         </TabList>
-        
+
         <TabPanels>
           {/* Pending Resources Panel */}
           <TabPanel>
             <Box overflowX="auto">
-              <Heading size="md" mb={4}>Resources Awaiting Approval</Heading>
-              
+              <Heading size="md" mb={4}>
+                Resources Awaiting Approval
+              </Heading>
+
               {pendingResources.length > 0 ? (
                 <Table variant="simple" colorScheme="purple">
                   <Thead bg="purple.100">
@@ -249,26 +278,35 @@ const SuperAdminPage = () => {
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {pendingResources.map(resource => (
+                    {pendingResources.map((resource) => (
                       <Tr key={resource.id}>
                         <Td fontWeight="medium">{resource.title}</Td>
                         <Td>{resource.subject}</Td>
                         <Td>{resource.ageGroup}</Td>
-                        <Td>{users.find(u => u.id === resource.userId)?.email || 'Unknown'}</Td>
-                        <Td>{new Date(resource.eventDate).toLocaleDateString()}</Td>
+                        <Td>
+                          {users.find((u) => u.id === resource.userId)?.email ||
+                            "Unknown"}
+                        </Td>
+                        <Td>
+                          {new Date(resource.eventDate).toLocaleDateString()}
+                        </Td>
                         <Td>
                           <Flex gap={2}>
-                            <Button 
-                              colorScheme="green" 
+                            <Button
+                              colorScheme="green"
                               size="sm"
-                              onClick={() => handleApproveResource(resource.id, true)}
+                              onClick={() =>
+                                handleApproveResource(resource.id, true)
+                              }
                             >
                               Approve
                             </Button>
-                            <Button 
-                              colorScheme="red" 
+                            <Button
+                              colorScheme="red"
                               size="sm"
-                              onClick={() => handleApproveResource(resource.id, false)}
+                              onClick={() =>
+                                handleApproveResource(resource.id, false)
+                              }
                             >
                               Reject
                             </Button>
@@ -285,12 +323,14 @@ const SuperAdminPage = () => {
               )}
             </Box>
           </TabPanel>
-          
+
           {/* User Management Panel */}
           <TabPanel>
             <Box overflowX="auto">
-              <Heading size="md" mb={4}>User Management</Heading>
-              
+              <Heading size="md" mb={4}>
+                User Management
+              </Heading>
+
               {users.length > 0 ? (
                 <Table variant="simple" colorScheme="purple">
                   <Thead bg="purple.100">
@@ -303,18 +343,22 @@ const SuperAdminPage = () => {
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {users.map(user => (
+                    {users.map((user) => (
                       <Tr key={user.id}>
                         <Td>{user.email}</Td>
-                        <Td>{`${user.firstName || ''} ${user.lastName || ''}`}</Td>
+                        <Td>{`${user.firstName || ""} ${
+                          user.lastName || ""
+                        }`}</Td>
                         <Td>
                           <select
                             value={user.role}
-                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                            style={{ 
-                              padding: '5px', 
-                              borderRadius: '4px',
-                              border: '1px solid #E2E8F0'
+                            onChange={(e) =>
+                              handleRoleChange(user.id, e.target.value)
+                            }
+                            style={{
+                              padding: "5px",
+                              borderRadius: "4px",
+                              border: "1px solid #E2E8F0",
                             }}
                           >
                             <option value="user">User</option>
@@ -323,8 +367,10 @@ const SuperAdminPage = () => {
                           </select>
                         </Td>
                         <Td>
-                          <Badge colorScheme={user.isApproved ? 'green' : 'yellow'}>
-                            {user.isApproved ? 'Approved' : 'Pending'}
+                          <Badge
+                            colorScheme={user.isApproved ? "green" : "yellow"}
+                          >
+                            {user.isApproved ? "Approved" : "Pending"}
                           </Badge>
                         </Td>
                         <Td>

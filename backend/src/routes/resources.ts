@@ -1,17 +1,12 @@
 import { Router, Request, Response } from "express";
 import {
   getAllResources,
-  getAllResourcesAdmin,
   getPendingResources,
   getUserResources,
   getResourceById,
   createResource,
-  updateResource,
   approveResource,
-  deleteResource,
-  bulkCreateResources,
-  bulkUpdateResources,
-  bulkDeleteResources,
+  rejectResource,
 } from "../controllers/resourceController.js";
 import {
   isSuperAdmin,
@@ -34,22 +29,14 @@ router.get(
   "/admin",
   requireAuth,
   requireRole(["admin", "superAdmin"]),
-  getAllResourcesAdmin
-); // See all resources as admin/superAdmin
+  getAllResources // Use getAllResources instead of getAllResourcesAdmin
+);
 router.get("/admin/mine", isAdminOrSuperAdmin, getUserResources); // See your own resources
 
 // SuperAdmin only routes
 router.get("/admin/pending", isSuperAdmin, getPendingResources); // See pending resources (superAdmin)
-router.patch("/:id/approve", isSuperAdmin, approveResource); // Approve/reject resource (superAdmin)
-
-// Update/delete routes (auth check is in the controller)
-router.put("/:id", isAdminOrSuperAdmin, updateResource);
-router.delete("/:id", isAdminOrSuperAdmin, deleteResource);
-
-// Bulk operations (SuperAdmin only)
-router.post("/bulk", isSuperAdmin, bulkCreateResources);
-router.post("/bulk-update", isSuperAdmin, bulkUpdateResources);
-router.delete("/", isSuperAdmin, bulkDeleteResources);
+router.patch("/:id/approve", isSuperAdmin, approveResource); // Approve resource (superAdmin)
+router.put("/:id/reject", isSuperAdmin, rejectResource); // Reject resource (superAdmin)
 
 // Image upload (admin/superAdmin)
 const upload = multer({ storage });

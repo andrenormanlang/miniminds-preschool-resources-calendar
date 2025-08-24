@@ -1,7 +1,15 @@
 // src/pages/UnauthorizedPage.tsx
-import { useNavigate } from 'react-router-dom';
-import { Box, Heading, Text, Button, Flex, Icon, IconProps } from '@chakra-ui/react';
-import { useUser } from '@clerk/clerk-react';
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Heading,
+  Text,
+  Button,
+  Flex,
+  Icon,
+  IconProps,
+} from "@chakra-ui/react";
+import { useUser } from "@clerk/clerk-react";
 
 // Create a simple lock icon using JSX with proper typing
 const LockIcon = (props: IconProps) => (
@@ -16,7 +24,7 @@ const LockIcon = (props: IconProps) => (
 const UnauthorizedPage = () => {
   const navigate = useNavigate();
   const { isSignedIn, user } = useUser();
-  
+
   return (
     <Box
       minH="calc(100vh - 70px)"
@@ -38,43 +46,46 @@ const UnauthorizedPage = () => {
         w="full"
       >
         <Icon as={LockIcon} w={16} h={16} color="red.500" mb={6} />
-        
-        <Heading 
-          fontFamily="Montserrat Alternates" 
-          size="xl" 
+
+        <Heading
+          fontFamily="Montserrat Alternates"
+          size="xl"
           mb={4}
           bgGradient="linear(to-r, red.400, purple.500)"
           bgClip="text"
         >
           Access Denied
         </Heading>
-        
+
         <Text fontSize="lg" mb={2}>
           Sorry, you don't have permission to access this page.
         </Text>
-        
+
         {isSignedIn ? (
           <Box mt={4}>
             <Text mb={4}>
-              Your current role ({user.publicMetadata.role || 'user'}) doesn't have the required permissions.
-              Please contact an administrator if you need access.
+              Your current role (
+              {(user?.publicMetadata?.role as string) || "user"}) doesn't have
+              the required permissions. Please contact an administrator if you
+              need access.
             </Text>
           </Box>
         ) : (
           <Text mb={4}>
-            You need to sign in with an account that has the appropriate permissions.
+            You need to sign in with an account that has the appropriate
+            permissions.
           </Text>
         )}
-        
+
         <Flex mt={6} gap={4} direction={["column", "row"]}>
           <Button
             colorScheme="blue"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             w={["full", "auto"]}
           >
             Return to Home
           </Button>
-          
+
           {!isSignedIn && (
             <Button
               variant="outline"
@@ -82,7 +93,7 @@ const UnauthorizedPage = () => {
               onClick={() => {
                 // The SignIn component will be rendered by Clerk when clicking the SignInButton
                 // This is just a redirect to home where the sign-in button is accessible
-                navigate('/');
+                navigate("/");
               }}
               w={["full", "auto"]}
             >

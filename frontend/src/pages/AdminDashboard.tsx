@@ -23,10 +23,10 @@ import {
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthFetch } from "../utils/authUtils";
-import { Resource, User } from "../types/type";
+import { Resource, User as UserType } from "../types/type";
 import Loading from "../components/Loading";
 
-interface User {
+interface AdminUser {
   id: number;
   clerkId: string;
   email: string;
@@ -42,7 +42,7 @@ const AdminDashboard = () => {
   const toast = useToast();
   const { authFetch } = useAuthFetch();
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [pendingResources, setPendingResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -188,8 +188,7 @@ const AdminDashboard = () => {
       });
 
       // Refresh the resource lists
-      fetchPendingResources();
-      fetchApprovedResources();
+      fetchDashboardData();
     } catch (error) {
       console.error("Error approving resource:", error);
       toast({

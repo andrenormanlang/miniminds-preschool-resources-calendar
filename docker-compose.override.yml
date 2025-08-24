@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    command: bun run dev:bun
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    command: bun run dev
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development

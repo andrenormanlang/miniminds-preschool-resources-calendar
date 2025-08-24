@@ -1,7 +1,7 @@
 // Clerk theme configuration for preschool learning platform
 // Child-friendly and warm styling for the UserButton and dropdown
 
-const clerkAppearance = {
+const clerkAppearance: any = {
   elements: {
     // Avatar styling - larger with friendly border
     userButtonAvatarBox: {
@@ -28,15 +28,14 @@ const clerkAppearance = {
       borderRadius: "50%",
     },
 
-    // Dropdown card styling - more playful and rounded
-    userButtonPopoverCard: {
-      border: "2px solid",
-      borderColor: "#E6F7FF",
-      boxShadow:
-        "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    // Dropdown/popover styling with soft preschool aesthetic
+    userButtonPopover: {
       borderRadius: "16px",
-      padding: "16px 0",
-      backgroundColor: "#F0F8FF",
+      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+      border: "1px solid #E2E8F0",
+      overflow: "hidden",
+      fontFamily: '"Open Sans", "Nunito", sans-serif',
+      minWidth: "240px",
     },
 
     // User info section in dropdown
@@ -61,26 +60,29 @@ const clerkAppearance = {
       "&:hover": {
         backgroundColor: "#E6F7FF",
         color: "#1890FF",
-        transform: "translateX(6px) scale(1.02)",
-        boxShadow: "0 4px 12px rgba(24, 144, 255, 0.15)",
+        transform: "translateX(4px)",
+        boxShadow: "0 2px 8px rgba(24, 144, 255, 0.15)",
       },
     },
 
-    // Icons in dropdown - friendly blue
-    userButtonPopoverActionButtonIcon: {
-      width: "22px",
-      height: "22px",
-      marginRight: "16px",
-      color: "#1890FF",
-      transition: "all 0.2s ease",
+    // Username section styling
+    userButtonPopoverIdentifierText: {
+      fontSize: "16px",
+      fontWeight: "600",
+      color: "#2D3748",
     },
 
-    // Footer in dropdown
+    // User email styling
+    userButtonPopoverIdentifierSubtext: {
+      fontSize: "13px",
+      color: "#718096",
+    },
+
+    // Footer section of dropdown
     userButtonPopoverFooter: {
-      padding: "16px 20px",
-      borderTop: "2px solid #E6F7FF",
-      marginTop: "8px",
-      borderRadius: "0 0 16px 16px",
+      padding: "12px 20px",
+      borderTop: "1px solid #E2E8F0",
+      backgroundColor: "#F8FAFC",
     },
 
     // Sign in/up forms styling
@@ -93,15 +95,14 @@ const clerkAppearance = {
       transition: "all 0.2s ease",
       "&:hover": {
         backgroundColor: "#096DD9",
-        transform: "translateY(-2px)",
-        boxShadow: "0 8px 16px rgba(24, 144, 255, 0.3)",
+        transform: "translateY(-1px)",
       },
     },
 
-    // Input fields
+    // Form input fields
     formFieldInput: {
-      borderRadius: "12px",
-      border: "2px solid #E6F7FF",
+      borderRadius: "10px",
+      border: "2px solid #E2E8F0",
       fontSize: "15px",
       padding: "12px 16px",
       fontFamily: '"Open Sans", "Nunito", sans-serif',
@@ -111,7 +112,7 @@ const clerkAppearance = {
       },
     },
 
-    // Labels
+    // Form labels
     formFieldLabel: {
       fontSize: "14px",
       fontWeight: "600",
@@ -120,15 +121,14 @@ const clerkAppearance = {
     },
   },
   variables: {
-    colorPrimary: "#1890FF", // Friendly blue primary color
-    colorSuccess: "#2E8B57", // Nature green for success
-    colorWarning: "#FFD700", // Sunny yellow for warnings
-    colorDanger: "#FF4757", // Soft red for errors
-    colorText: "#374151", // Warm dark gray
-    colorTextSecondary: "#6B7280", // Medium gray
-    colorBackground: "#F0F8FF", // Alice blue background
-    colorInputBackground: "#FFFFFF", // White input backgrounds
-    colorInputText: "#374151", // Dark text in inputs
+    colorPrimary: "#1890FF",
+    colorSuccess: "#2E8B57",
+    colorWarning: "#FFD700",
+    colorDanger: "#FF6B6B",
+    colorText: "#2D3748",
+    colorBackground: "#FFFFFF",
+    colorInputBackground: "#FFFFFF",
+    colorInputText: "#374151",
     fontFamily: '"Open Sans", "Nunito", sans-serif',
     fontSize: "15px",
     fontWeight: "500",

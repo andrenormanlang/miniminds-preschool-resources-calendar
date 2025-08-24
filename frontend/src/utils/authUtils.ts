@@ -1,15 +1,16 @@
-import { useUser } from '@clerk/clerk-react';
-import { useState, useCallback } from 'react';
+import { useUser, useAuth } from "@clerk/clerk-react";
+import { useState, useCallback } from "react";
 
 export const useAuthFetch = () => {
-  const { getToken, user, isSignedIn } = useUser();
+  const { getToken } = useAuth();
+  const { user, isSignedIn } = useUser();
   const [error, setError] = useState<Error | null>(null);
 
   const authFetch = useCallback(
     async (url: string, options: RequestInit = {}) => {
       try {
         if (!isSignedIn || !user) {
-          throw new Error('User not authenticated');
+          throw new Error("User not authenticated");
         }
 
         // Get token or just use user ID directly
@@ -17,7 +18,7 @@ export const useAuthFetch = () => {
 
         // Set up headers with authorization
         const headers = {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
           ...options.headers,
         };
@@ -31,13 +32,13 @@ export const useAuthFetch = () => {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Request failed');
+          throw new Error(errorData.message || "Request failed");
         }
 
         return await response.json();
       } catch (err) {
-        console.error('Auth fetch error:', err);
-        setError(err instanceof Error ? err : new Error('Unknown error'));
+        console.error("Auth fetch error:", err);
+        setError(err instanceof Error ? err : new Error("Unknown error"));
         throw err;
       }
     },
@@ -47,14 +48,14 @@ export const useAuthFetch = () => {
   // Add a method to just get the token or user ID for custom fetch calls
   const getAuthToken = useCallback(async () => {
     if (!isSignedIn || !user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
     return user.id; // Return the user ID as the token
   }, [isSignedIn, user]);
 
-  return { 
-    authFetch, 
+  return {
+    authFetch,
     error,
-    getToken: getAuthToken 
+    getToken: getAuthToken,
   };
 };

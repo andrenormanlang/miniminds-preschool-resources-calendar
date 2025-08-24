@@ -4,11 +4,13 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec \"tsx src/server.ts\"",
+    "dev:bun": "bun --watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "migrate": "npx prisma migrate deploy"
+    "start": "bun run dist/server.js",
+    "migrate": "bunx prisma migrate deploy"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^5.0.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.20.0",
     "@types/jsonwebtoken": "^9.0.9",

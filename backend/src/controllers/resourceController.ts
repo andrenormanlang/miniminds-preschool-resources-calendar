@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import * as resourceService from "../services/resourceService.js";
+import { resourceService } from "../services/resourceService";
 import { validationResult } from "express-validator";
 import { PrismaClient } from "@prisma/client";
 
@@ -21,28 +21,116 @@ export const getAllResources = async (
   next: NextFunction
 ) => {
   try {
-    // Regular users only see approved resources
-    const resources = await resourceService.getAllResources(true);
-    res.json(resources);
+    const { approved } = req.query;
+
+    // Convert query parameter to boolean
+    let approvedFilter: boolean | undefined;
+    if (approved === "true") approvedFilter = true;
+    else if (approved === "false") approvedFilter = false;
+    else approvedFilter = true; // Default to approved resources only
+
+    const resources = await resourceService.getAllResources(approvedFilter);
+    res.status(200).json(resources);
   } catch (error) {
-    next(error);
+    console.error("Error in getAllResources:", error);
+    res.status(500).json({
+      message: "Failed to fetch resources",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
 
-export const getAllResourcesAdmin = async (
+export const createResource = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // SuperAdmin can see all resources
-    const isSuperAdmin = req.user?.role === "superAdmin";
-    const resources = isSuperAdmin
-      ? await resourceService.getAllResources(false)
-      : await resourceService.getUserResources(req.user?.id || 0);
-    res.json(resources);
+    const { title, type, subject, ageGroup, description, eventDate, imageUrl } =
+      req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!title || !type || !subject || !ageGroup || !eventDate) {
+      return res.status(400).json({
+        message:
+          "Missing required fields: title, type, subject, ageGroup, eventDate",
+      });
+    }
+
+    const resource = await resourceService.createResource({
+      title,
+      type,
+      subject,
+      ageGroup,
+      description,
+      eventDate,
+      imageUrl,
+      userId,
+    });
+
+    res.status(201).json(resource);
   } catch (error) {
-    next(error);
+    console.error("Error in createResource:", error);
+    res.status(500).json({
+      message: "Failed to create resource",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const approveResource = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+
+    if (!resourceId || isNaN(resourceId)) {
+      return res.status(400).json({ message: "Invalid resource ID" });
+    }
+
+    const updatedResource = await resourceService.approveResource(resourceId);
+
+    if (!updatedResource) {
+      return res.status(404).json({ message: "Resource not found" });
+    }
+
+    res.status(200).json(updatedResource);
+  } catch (error) {
+    console.error("Error in approveResource:", error);
+    res.status(500).json({
+      message: "Failed to approve resource",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const rejectResource = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+
+    if (!resourceId || isNaN(resourceId)) {
+      return res.status(400).json({ message: "Invalid resource ID" });
+    }
+
+    await resourceService.rejectResource(resourceId);
+
+    res.status(200).json({ message: "Resource rejected and deleted" });
+  } catch (error) {
+    console.error("Error in rejectResource:", error);
+    res.status(500).json({
+      message: "Failed to reject resource",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
 
@@ -52,11 +140,14 @@ export const getPendingResources = async (
   next: NextFunction
 ) => {
   try {
-    // Only superAdmin can see pending resources
     const resources = await resourceService.getPendingResources();
-    res.json(resources);
+    res.status(200).json(resources);
   } catch (error) {
-    next(error);
+    console.error("Error in getPendingResources:", error);
+    res.status(500).json({
+      message: "Failed to fetch pending resources",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
 
@@ -87,187 +178,6 @@ export const getResourceById = async (
       return res.status(404).json({ message: "Resource not found" });
     }
     res.json(resource);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const createResource = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // Validate request
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    // Get user ID and role if authenticated
-    const userId = req.user?.id;
-    const userRole = req.user?.role || "user";
-
-    // Auto-approve if created by superAdmin
-    const autoApprove = userRole === "superAdmin";
-
-    // Create the resource
-    const resource = await resourceService.createResource(
-      req.body,
-      userId,
-      autoApprove
-    );
-
-    res.status(201).json(resource);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const updateResource = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const userId = req.user?.id;
-    const userRole = req.user?.role || "user";
-    const resourceId = parseInt(req.params.id);
-
-    // First, check if the resource exists and get its current data
-    const existingResource = await prisma.resource.findUnique({
-      where: { id: resourceId },
-    });
-
-    if (!existingResource) {
-      return res.status(404).json({ message: "Resource not found" });
-    }
-
-    // Determine if we should maintain approval status
-    let maintainApprovalStatus = false;
-
-    // If the user is an admin editing their own resource, maintain the approval status
-    if (userRole === "admin" && existingResource.userId === userId) {
-      maintainApprovalStatus = true;
-    }
-
-    // If the user is a superAdmin, always maintain the approval status (they can approve separately if needed)
-    if (userRole === "superAdmin") {
-      maintainApprovalStatus = true;
-    }
-
-    // Update the resource with the appropriate approval handling
-    const resource = await resourceService.updateResource(
-      resourceId,
-      req.body,
-      userId,
-      userRole,
-      maintainApprovalStatus
-    );
-
-    res.json(resource);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const approveResource = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const resourceId = parseInt(req.params.id);
-
-    if (!resourceId || isNaN(resourceId)) {
-      return res.status(400).json({ message: "Invalid resource ID" });
-    }
-
-    // Check if resource exists
-    const resource = await prisma.resource.findUnique({
-      where: { id: resourceId },
-    });
-
-    if (!resource) {
-      return res.status(404).json({ message: "Resource not found" });
-    }
-
-    // Update resource approval status
-    const updatedResource = await prisma.resource.update({
-      where: { id: resourceId },
-      data: { isApproved: true },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            role: true,
-          },
-        },
-      },
-    });
-
-    return res.status(200).json(updatedResource);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const deleteResource = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const userId = req.user?.id;
-    const userRole = req.user?.role || "user";
-
-    await resourceService.deleteResource(
-      parseInt(req.params.id),
-      userId,
-      userRole
-    );
-    res.json({ message: "Resource deleted" });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const bulkCreateResources = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const resources = await resourceService.bulkCreateResources(req.body);
-    res.status(201).json(resources);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const bulkUpdateResources = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const resources = await resourceService.bulkUpdateResources(req.body);
-    res.json(resources);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const bulkDeleteResources = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const count = await resourceService.bulkDeleteResources(req.body.ids);
-    res.json({ message: "Resources deleted", count });
   } catch (error) {
     next(error);
   }
