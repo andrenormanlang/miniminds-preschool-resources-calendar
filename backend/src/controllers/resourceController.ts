@@ -182,3 +182,79 @@ export const getResourceById = async (
     next(error);
   }
 };
+
+// Update resource
+export const updateResource = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+    const updateData = req.body;
+
+    // Check if resource exists
+    const existingResource = await resourceService.getResourceById(resourceId);
+    if (!existingResource) {
+      return res.status(404).json({ message: "Resource not found" });
+    }
+
+    // Check if user owns the resource or is superAdmin
+    if (
+      req.user?.role !== "superAdmin" &&
+      existingResource.userId !== req.user?.id
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const updatedResource = await prisma.resource.update({
+      where: { id: resourceId },
+      data: {
+        title: updateData.title,
+        description: updateData.description,
+        type: updateData.type,
+        subject: updateData.subject,
+        ageGroup: updateData.ageGroup,
+        eventDate: updateData.eventDate ? new Date(updateData.eventDate) : undefined,
+        imageUrl: updateData.imageUrl,
+      },
+    });
+
+    res.json(updatedResource);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete resource
+export const deleteResource = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+
+    // Check if resource exists
+    const existingResource = await resourceService.getResourceById(resourceId);
+    if (!existingResource) {
+      return res.status(404).json({ message: "Resource not found" });
+    }
+
+    // Check if user owns the resource or is superAdmin
+    if (
+      req.user?.role !== "superAdmin" &&
+      existingResource.userId !== req.user?.id
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    await prisma.resource.delete({
+      where: { id: resourceId },
+    });
+
+    res.json({ message: "Resource deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};

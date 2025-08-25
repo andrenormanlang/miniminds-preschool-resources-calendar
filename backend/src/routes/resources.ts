@@ -5,6 +5,8 @@ import {
   getUserResources,
   getResourceById,
   createResource,
+  updateResource,
+  deleteResource,
   approveResource,
   rejectResource,
 } from "../controllers/resourceController.js";
@@ -25,6 +27,8 @@ router.get("/:id", getResourceById); // Get single resource details
 
 // Admin/SuperAdmin routes
 router.post("/", isAdminOrSuperAdmin, createResource); // Create resource (admin/superAdmin)
+router.put("/:id", isAdminOrSuperAdmin, updateResource); // Update resource (admin/superAdmin)
+router.delete("/:id", isAdminOrSuperAdmin, deleteResource); // Delete resource (admin/superAdmin)
 router.get(
   "/admin",
   requireAuth,
