@@ -6,8 +6,8 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/bun.lockb ./
 RUN bun install
 
-# Build-time environment variables for frontend
-ARG VITE_API_URL
+# Build-time environment variables for frontend with defaults
+ARG VITE_API_URL=https://miniminds-preschool-resources-calendar.onrender.com/api
 ARG VITE_CLERK_PUBLISHABLE_KEY
 
 # Set environment variables for the build

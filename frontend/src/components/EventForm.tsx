@@ -22,6 +22,9 @@ import { useAuthFetch } from "../utils/authUtils";
 import AISuggestions from "./AISuggestions";
 import AIDescriptionEnhancer from "./AIDescriptionEnhancer";
 
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 type FormData = {
   title: string;
   type: string;
@@ -104,16 +107,13 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
     try {
       const token = await getToken();
 
-      const response = await fetch(
-        "http://localhost:4000/api/resources/upload",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: uploadData,
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/resources/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadData,
+      });
 
       if (!response.ok) {
         throw new Error("Failed to upload image");

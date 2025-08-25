@@ -4,6 +4,9 @@ import { useUser } from "@clerk/clerk-react";
 import { useAuthFetch } from "../utils/authUtils";
 import Loading from "./Loading";
 
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
@@ -18,9 +21,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const checkUserRole = async () => {
       if (isSignedIn) {
         try {
-          const user = await authFetch(
-            "http://localhost:4000/api/users/current"
-          );
+          const user = await authFetch(`${API_BASE_URL}/users/current`);
           console.log("PROTECTED ROUTE - Checking authorization:", {
             role: user.role,
             lowercaseRole: user.role.toLowerCase(),

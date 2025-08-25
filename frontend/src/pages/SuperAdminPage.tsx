@@ -23,6 +23,9 @@ import { useUser, useAuth } from "@clerk/clerk-react";
 import Loading from "../components/Loading";
 import { Resource, User } from "../types/type";
 
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 const SuperAdminPage = () => {
   const [pendingResources, setPendingResources] = useState<Resource[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -78,7 +81,7 @@ const SuperAdminPage = () => {
         throw new Error("Authentication token required");
       }
 
-      const response = await fetch("http://localhost:4000/api/users", {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -109,17 +112,14 @@ const SuperAdminPage = () => {
         throw new Error("Authentication token required");
       }
 
-      const response = await fetch(
-        `http://localhost:4000/api/resources/${id}/approve`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ approve }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/resources/${id}/approve`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ approve }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update resource approval status");
@@ -153,15 +153,12 @@ const SuperAdminPage = () => {
         throw new Error("Authentication token required");
       }
 
-      const response = await fetch(
-        `http://localhost:4000/api/users/${id}/approve`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/users/${id}/approve`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to approve user");
@@ -197,17 +194,14 @@ const SuperAdminPage = () => {
         throw new Error("Authentication token required");
       }
 
-      const response = await fetch(
-        `http://localhost:4000/api/users/${id}/role`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ role: newRole }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/users/${id}/role`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update role");

@@ -33,6 +33,9 @@ import {
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 // Animation variants for content elements
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -40,7 +43,6 @@ const fadeIn = {
 };
 
 const staggerChildren = {
-
   visible: {
     opacity: 1,
     transition: {
@@ -74,27 +76,22 @@ const ModalCard = ({
   const { isSignedIn } = useUser();
   const { authFetch } = useAuthFetch();
   const toast = useToast();
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(
-    null
-  );
-  
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
- useEffect(() => {
-  const getCurrentUserInfo = async () => {
-    if (isSignedIn) {
-      try {
-        const currentUser = await authFetch(
-          "http://localhost:4000/api/users/current"
-        );
-        setCurrentUserRole(currentUser.role);
-      } catch (err) {
-        console.error("Failed to get current user info:", err);
+  useEffect(() => {
+    const getCurrentUserInfo = async () => {
+      if (isSignedIn) {
+        try {
+          const currentUser = await authFetch(`${API_BASE_URL}/users/current`);
+          setCurrentUserRole(currentUser.role);
+        } catch (err) {
+          console.error("Failed to get current user info:", err);
+        }
       }
-    }
-  };
+    };
 
-  getCurrentUserInfo();
-}, [isSignedIn, authFetch]);
+    getCurrentUserInfo();
+  }, [isSignedIn, authFetch]);
 
   // Function to approve a resource (superAdmin only)
   const canApproveResource = () => {
@@ -103,13 +100,10 @@ const ModalCard = ({
 
   const handleApprove = async () => {
     try {
-      await authFetch(
-        `http://localhost:4000/api/resources/${resource?.id}/approve`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ approve: true }),
-        }
-      );
+      await authFetch(`${API_BASE_URL}/resources/${resource?.id}/approve`, {
+        method: "PATCH",
+        body: JSON.stringify({ approve: true }),
+      });
 
       toast({
         title: "Resource approved",

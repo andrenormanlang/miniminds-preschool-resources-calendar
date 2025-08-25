@@ -2,6 +2,9 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { useToast } from "@chakra-ui/react";
 
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 interface ResourceApprovalContextType {
   approveResource: (resourceId: number) => Promise<boolean>;
   rejectResource: (resourceId: number) => Promise<boolean>;
@@ -29,7 +32,7 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       const response = await fetch(
-        `http://localhost:4000/api/resources/${resourceId}/approve`,
+        `${API_BASE_URL}/resources/${resourceId}/approve`,
         {
           method: "PATCH",
           headers: {
@@ -75,7 +78,7 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       const response = await fetch(
-        `http://localhost:4000/api/resources/${resourceId}/approve`,
+        `${API_BASE_URL}/resources/${resourceId}/approve`,
         {
           method: "PATCH",
           headers: {

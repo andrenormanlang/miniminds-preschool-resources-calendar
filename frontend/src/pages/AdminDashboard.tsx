@@ -26,6 +26,9 @@ import { useAuthFetch } from "../utils/authUtils";
 import { Resource, User as UserType } from "../types/type";
 import Loading from "../components/Loading";
 
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 interface AdminUser {
   id: number;
   clerkId: string;
@@ -55,7 +58,7 @@ const AdminDashboard = () => {
 
       try {
         // Verify user is superAdmin by trying to access admin-only endpoint
-        await authFetch("http://localhost:4000/api/resources/admin/pending");
+        await authFetch(`${API_BASE_URL}/resources/admin/pending`);
 
         // If that succeeded, load dashboard data
         fetchDashboardData();
@@ -79,12 +82,12 @@ const AdminDashboard = () => {
       setLoading(true);
 
       // Fetch all users
-      const usersData = await authFetch("http://localhost:4000/api/users");
+      const usersData = await authFetch(`${API_BASE_URL}/users`);
       setUsers(usersData);
 
       // Fetch pending resources
       const pendingResourcesData = await authFetch(
-        "http://localhost:4000/api/resources/admin/pending"
+        `${API_BASE_URL}/resources/admin/pending`
       );
       setPendingResources(pendingResourcesData);
     } catch (error) {
@@ -102,7 +105,7 @@ const AdminDashboard = () => {
 
   const handleApproveUser = async (userId: number) => {
     try {
-      await authFetch(`http://localhost:4000/api/users/${userId}/approve`, {
+      await authFetch(`${API_BASE_URL}/users/${userId}/approve`, {
         method: "PUT",
       });
 
@@ -131,7 +134,7 @@ const AdminDashboard = () => {
 
   const handleChangeRole = async (userId: number, newRole: string) => {
     try {
-      await authFetch(`http://localhost:4000/api/users/${userId}/role`, {
+      await authFetch(`${API_BASE_URL}/users/${userId}/role`, {
         method: "PATCH",
         body: JSON.stringify({ role: newRole }),
       });

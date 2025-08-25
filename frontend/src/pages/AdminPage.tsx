@@ -28,6 +28,9 @@ import { Resource } from "../types/type";
 import EventForm from "../components/EventForm";
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import ModalCard from "../components/ModalCard";
+
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 import { useAuthFetch } from "../utils/authUtils";
 
 type FormData = {
@@ -129,7 +132,7 @@ const AdminPage = () => {
       if (isEditMode && selectedResource) {
         // Update existing resource
         updatedResource = await authFetch(
-          `http://localhost:4000/api/resources/${selectedResource.id}`,
+          `${API_BASE_URL}/resources/${selectedResource.id}`,
           {
             method: "PUT",
             headers: {
@@ -140,16 +143,13 @@ const AdminPage = () => {
         );
       } else {
         // Create new resource
-        updatedResource = await authFetch(
-          "http://localhost:4000/api/resources",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          }
-        );
+        updatedResource = await authFetch(`${API_BASE_URL}/resources`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
       }
 
       if (isEditMode) {

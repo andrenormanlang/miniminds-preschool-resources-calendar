@@ -27,6 +27,9 @@ import { useAuthFetch } from "../utils/authUtils";
 import { MdDashboard } from "react-icons/md";
 import Logo from "./Logo";
 
+// API base URL configuration
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 const Header = () => {
   const { isSignedIn, user } = useUser();
   const { authFetch } = useAuthFetch();
@@ -59,9 +62,7 @@ const Header = () => {
     const getUserRole = async () => {
       if (isSignedIn) {
         try {
-          const userData = await authFetch(
-            "http://localhost:4000/api/users/current"
-          );
+          const userData = await authFetch(`${API_BASE_URL}/users/current`);
           setUserRole(userData.role);
         } catch (error) {
           console.error("Failed to get user role:", error);
@@ -125,9 +126,13 @@ const Header = () => {
         pt={{ base: 12, md: 0 }}
         pb={{ base: 2, md: 0 }}
       >
-        <Flex alignItems="center" justifyContent={{ base: "center", md: "flex-start" }} flexWrap="wrap">
+        <Flex
+          alignItems="center"
+          justifyContent={{ base: "center", md: "flex-start" }}
+          flexWrap="wrap"
+        >
           {/* Enhanced Logo with modern sans-serif font */}
-          <Logo 
+          <Logo
             size="md"
             variant="default"
             showIcon={true}
@@ -240,9 +245,9 @@ const Header = () => {
                     {/* Only show Admin Dashboard for superAdmin */}
                     {userRole === "superAdmin" && (
                       <>
-                        <MenuGroup 
-                          title="Admin Options" 
-                          color="purple.600" 
+                        <MenuGroup
+                          title="Admin Options"
+                          color="purple.600"
                           fontWeight="bold"
                         >
                           <MenuItem
@@ -370,7 +375,7 @@ const Header = () => {
             </SignInButton>
           )}
         </Flex>
-        </Flex>
+      </Flex>
     </Box>
   );
 };
