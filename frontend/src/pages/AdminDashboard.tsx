@@ -23,7 +23,7 @@ import {
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthFetch } from "../utils/authUtils";
-import { Resource, User as UserType } from "../types/type";
+import { Resource} from "../types/type";
 import Loading from "../components/Loading";
 
 // API base URL configuration
@@ -40,7 +40,7 @@ interface AdminUser {
 }
 
 const AdminDashboard = () => {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const navigate = useNavigate();
   const toast = useToast();
   const { authFetch } = useAuthFetch();
@@ -132,35 +132,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleChangeRole = async (userId: number, newRole: string) => {
-    try {
-      await authFetch(`${API_BASE_URL}/users/${userId}/role`, {
-        method: "PATCH",
-        body: JSON.stringify({ role: newRole }),
-      });
 
-      toast({
-        title: "Role Updated",
-        status: "success",
-        duration: 3000,
-      });
-
-      // Update local state
-      setUsers(
-        users.map((user) =>
-          user.id === userId ? { ...user, role: newRole } : user
-        )
-      );
-    } catch (error) {
-      console.error("Error changing role:", error);
-      toast({
-        title: "Error",
-        description: "Failed to change user role",
-        status: "error",
-        duration: 5000,
-      });
-    }
-  };
 
   const handleApproveResource = async (resourceId: number) => {
     try {

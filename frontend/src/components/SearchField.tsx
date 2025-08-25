@@ -5,7 +5,6 @@ import {
   InputLeftElement,
   InputRightElement,
   IconButton,
-  Box,
   FormControl,
   FormLabel,
   useColorModeValue,
@@ -51,6 +50,7 @@ const SearchField: React.FC<SearchFieldProps> = ({
   const textColor = useColorModeValue('#2D3748', '#F7FAFC');
   const placeholderColor = useColorModeValue('#718096', '#A0AEC0');
   const iconColor = useColorModeValue('#4A5568', '#CBD5E0');
+  const hoverBgColor = useColorModeValue('gray.100', 'gray.600');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -124,7 +124,7 @@ const SearchField: React.FC<SearchFieldProps> = ({
             onClick={handleClear}
             color={iconColor}
             _hover={{
-              bg: useColorModeValue('gray.100', 'gray.600'),
+              bg: hoverBgColor,
             }}
           />
         </InputRightElement>

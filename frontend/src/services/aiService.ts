@@ -1,4 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
+import type {  AIRecommendation, ConversationMessage, AISuggestionsResult } from '../types/type.d';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:4000/api";
@@ -8,8 +9,8 @@ export interface AIService {
     ageGroup: string,
     subject: string,
     type: string
-  ) => Promise<any>;
-  getPersonalizedRecommendations: () => Promise<any>;
+  ) => Promise<AISuggestionsResult>;
+  getPersonalizedRecommendations: () => Promise<AIRecommendation[]>;
   answerQuestion: (question: string, context?: string) => Promise<string>;
   enhanceDescription: (
     title: string,
@@ -18,10 +19,10 @@ export interface AIService {
     ageGroup: string,
     subject: string
   ) => Promise<string>;
-  chat: (message: string, conversationHistory?: any[]) => Promise<string>;
+  chat: (message: string, conversationHistory?: ConversationMessage[]) => Promise<string>;
   chatStream: (
     message: string,
-    conversationHistory?: any[],
+    conversationHistory?: ConversationMessage[],
     onChunk?: (chunk: string) => void
   ) => Promise<string>;
 }
@@ -137,7 +138,7 @@ export const useAIService = (): AIService => {
     }
   };
 
-  const chat = async (message: string, conversationHistory?: any[]) => {
+  const chat = async (message: string, conversationHistory?: ConversationMessage[]) => {
     try {
       const response = await fetch(`${API_BASE_URL}/ai/chat`, {
         method: "POST",
@@ -161,7 +162,7 @@ export const useAIService = (): AIService => {
 
   const chatStream = async (
     message: string,
-    conversationHistory?: any[],
+    conversationHistory?: ConversationMessage[],
     onChunk?: (chunk: string) => void
   ) => {
     try {

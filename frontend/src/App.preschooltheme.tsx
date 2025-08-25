@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChakraProvider, Box, Heading, Text, Button, Card, CardBody, Tag, Stack, Grid, Container, VStack, HStack, Badge, Avatar, Flex, SimpleGrid, Divider } from '@chakra-ui/react';
+import { ChakraProvider, Box, Heading, Text, Button, Card, CardBody, Tag, Grid, Container, VStack, HStack, Badge, Avatar, Flex, SimpleGrid, Divider } from '@chakra-ui/react';
 import preschoolTheme from './theme/preschoolTheme';
 import EducationalIcons from './components/icons/EducationalIcons';
 import Logo from './components/Logo';

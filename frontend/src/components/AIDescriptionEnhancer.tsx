@@ -15,6 +15,19 @@ import {
 } from "@chakra-ui/react";
 import { FaMagic, FaCheckCircle, FaTimes } from "react-icons/fa";
 import { useAIService } from "../services/aiService";
+import type { AIEnhancementResult } from "../types/type.d";
+
+// Type guard to check if result is an AIEnhancementResult
+const isEnhancementResult = (result: unknown): result is AIEnhancementResult => {
+  return (
+    typeof result === "object" &&
+    result !== null &&
+    "title" in result &&
+    "description" in result &&
+    typeof (result as AIEnhancementResult).title === "string" &&
+    typeof (result as AIEnhancementResult).description === "string"
+  );
+};
 
 interface AIDescriptionEnhancerProps {
   title: string;
@@ -69,14 +82,9 @@ const AIDescriptionEnhancer: React.FC<AIDescriptionEnhancerProps> = ({
       console.log("Enhancement result:", result); // Debug log
 
       // Handle both object and string responses
-      if (
-        typeof result === "object" &&
-        result !== null &&
-        "title" in result &&
-        "description" in result
-      ) {
-        setEnhancedTitle((result as any).title);
-        setEnhancedDescription((result as any).description);
+      if (isEnhancementResult(result)) {
+        setEnhancedTitle(result.title);
+        setEnhancedDescription(result.description);
       } else if (typeof result === "string") {
         // Fallback: keep original title, use result as description
         setEnhancedTitle(title);

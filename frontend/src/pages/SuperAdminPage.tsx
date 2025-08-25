@@ -31,7 +31,7 @@ const SuperAdminPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const { getToken } = useAuth();
 
   useEffect(() => {

@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  Box,
   Button,
-  Input,
   VStack,
   HStack,
   Text,
@@ -15,7 +13,6 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
-  useDisclosure,
   Icon,
   Badge,
   Spinner,

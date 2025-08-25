@@ -3,104 +3,193 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global Font Settings for Preschool Learning Platform */
+/* Mobile-First Global Font Settings for Preschool Learning Platform */
 html {
   font-family: "Open Sans", "Nunito", sans-serif;
-  background: linear-gradient(135deg, #E8F4FD 0%, #E1F5FE 25%, #FFF8F0 50%, #FCE4EC 75%, #F0F8FF 100%);
+  background: linear-gradient(
+    135deg,
+    #e8f4fd 0%,
+    #e1f5fe 25%,
+    #fff8f0 50%,
+    #fce4ec 75%,
+    #f0f8ff 100%
+  );
   background-attachment: fixed;
   background-size: 400% 400%;
   animation: gentle-gradient 20s ease infinite;
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   height: 100%;
+  font-size: 16px; /* Prevent zoom on iOS */
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   font-family: "Open Sans", "Nunito", sans-serif;
   background: transparent;
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+
+  /* Mobile optimizations */
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  touch-action: manipulation;
+
+  /* Support for safe areas */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 #root {
   background: transparent;
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
+  width: 100%;
+  overflow-x: hidden;
 }
 
-/* Gentle background animation */
+/* Mobile-optimized gentle background animation */
 @keyframes gentle-gradient {
-  0% { background-position: 0% 50%; }
-  25% { background-position: 100% 50%; }
-  50% { background-position: 100% 100%; }
-  75% { background-position: 0% 100%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Reduce animation on mobile for better performance */
+@media (max-width: 768px) {
+  html {
+    animation: none;
+    background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%);
+  }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent zoom on input focus */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 /* Alternative static backgrounds for different sections */
 .bg-primary {
-  background: linear-gradient(135deg, #E8F4FD 0%, #E1F5FE 50%, #F0F8FF 100%);
+  background: linear-gradient(135deg, #e8f4fd 0%, #e1f5fe 50%, #f0f8ff 100%);
 }
 
 .bg-warm {
-  background: linear-gradient(135deg, #FFF8F0 0%, #FCE4EC 50%, #FFF3E0 100%);
+  background: linear-gradient(135deg, #fff8f0 0%, #fce4ec 50%, #fff3e0 100%);
 }
 
 .bg-nature {
-  background: linear-gradient(135deg, #E8F5E8 0%, #E0F2F1 50%, #F0FFF4 100%);
+  background: linear-gradient(135deg, #e8f5e8 0%, #e0f2f1 50%, #f0fff4 100%);
 }
 
 .bg-creative {
-  background: linear-gradient(135deg, #F8F0FF 0%, #F3E5F5 50%, #E8EAF6 100%);
+  background: linear-gradient(135deg, #f8f0ff 0%, #f3e5f5 50%, #e8eaf6 100%);
 }
 
 .bg-sunny {
-  background: linear-gradient(135deg, #FFF9C4 0%, #FFFACD 50%, #FFF8DC 100%);
+  background: linear-gradient(135deg, #fff9c4 0%, #fffacd 50%, #fff8dc 100%);
 }
 
 .bg-ocean {
-  background: linear-gradient(135deg, #E0F7FA 0%, #E1F5FE 50%, #E8F4FD 100%);
+  background: linear-gradient(135deg, #e0f7fa 0%, #e1f5fe 50%, #e8f4fd 100%);
 }
 
 /* Playful pattern backgrounds */
 .bg-bubbles {
-  background: 
-    radial-gradient(circle at 25% 25%, rgba(232, 244, 253, 0.8) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(252, 228, 236, 0.8) 0%, transparent 50%),
-    linear-gradient(135deg, #FFF8F0 0%, #F8F0FF 100%);
+  background: radial-gradient(
+      circle at 25% 25%,
+      rgba(232, 244, 253, 0.8) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      rgba(252, 228, 236, 0.8) 0%,
+      transparent 50%
+    ),
+    linear-gradient(135deg, #fff8f0 0%, #f8f0ff 100%);
 }
 
 .bg-clouds {
-  background: 
-    radial-gradient(ellipse 800px 400px at top, rgba(232, 244, 253, 0.6) 0%, transparent 70%),
-    radial-gradient(ellipse 600px 300px at bottom, rgba(232, 245, 232, 0.6) 0%, transparent 70%),
-    linear-gradient(135deg, #FFF8F0 0%, #F0F8FF 100%);
+  background: radial-gradient(
+      ellipse 800px 400px at top,
+      rgba(232, 244, 253, 0.6) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 600px 300px at bottom,
+      rgba(232, 245, 232, 0.6) 0%,
+      transparent 70%
+    ),
+    linear-gradient(135deg, #fff8f0 0%, #f0f8ff 100%);
 }
 
 .bg-rainbow {
-  background: linear-gradient(45deg, 
-    #E8F4FD 0%, 
-    #FCE4EC 16.66%, 
-    #FFF9C4 33.33%, 
-    #E8F5E8 50%, 
-    #F8F0FF 66.66%, 
-    #E0F7FA 83.33%, 
-    #E8F4FD 100%);
+  background: linear-gradient(
+    45deg,
+    #e8f4fd 0%,
+    #fce4ec 16.66%,
+    #fff9c4 33.33%,
+    #e8f5e8 50%,
+    #f8f0ff 66.66%,
+    #e0f7fa 83.33%,
+    #e8f4fd 100%
+  );
   background-size: 300% 300%;
   animation: rainbow-shift 15s ease infinite;
 }
 
 @keyframes rainbow-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: "Fredoka", "Quicksand", "Comfortaa", cursive;
   font-weight: 600;
-  color: #1890FF;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  color: #1890ff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   letter-spacing: -0.025em;
 }
 
@@ -129,11 +218,11 @@ h1, h2, h3, h4, h5, h6 {
 .text-hero {
   font-family: "Baloo 2", "Comfortaa", cursive;
   font-weight: 800;
-  background: linear-gradient(45deg, #1890FF, #FF7F50, #8B5CF6);
+  background: linear-gradient(45deg, #1890ff, #ff7f50, #8b5cf6);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+  text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .text-playful {
@@ -177,16 +266,16 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Logo variants */
 .logo-gradient {
-  background: linear-gradient(45deg, #1890FF, #FF7F50, #8B5CF6);
+  background: linear-gradient(45deg, #1890ff, #ff7f50, #8b5cf6);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .logo-shadow {
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .logo-hover {
@@ -199,106 +288,139 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Enhanced Preschool Color Palette */
 :root {
-  --primary-blue: #1890FF;
-  --primary-blue-light: #E6F7FF;
-  --secondary-coral: #FF7F50;
-  --secondary-coral-light: #FFF2E8;
-  --success-green: #2E8B57;
-  --success-green-light: #E8F5E8;
-  --warning-gold: #FFD700;
-  --warning-gold-light: #FFFBE6;
-  --error-red: #FF4757;
-  --error-red-light: #FFF0F0;
-  --purple-creative: #8B5CF6;
-  --purple-creative-light: #F3E8FF;
-  
+  --primary-blue: #1890ff;
+  --primary-blue-light: #e6f7ff;
+  --secondary-coral: #ff7f50;
+  --secondary-coral-light: #fff2e8;
+  --success-green: #2e8b57;
+  --success-green-light: #e8f5e8;
+  --warning-gold: #ffd700;
+  --warning-gold-light: #fffbe6;
+  --error-red: #ff4757;
+  --error-red-light: #fff0f0;
+  --purple-creative: #8b5cf6;
+  --purple-creative-light: #f3e8ff;
+
   /* Enhanced Background Colors */
-  --background-light: #E8F4FD;
-  --background-cream: #FFF8F0;
-  --background-mint: #E8F5E8;
-  --background-lavender: #F8F0FF;
-  --background-coral: #FCE4EC;
-  --background-aqua: #E0F7FA;
-  --background-sunshine: #FFF9C4;
-  --background-sage: #F3E5F5;
-  
+  --background-light: #e8f4fd;
+  --background-cream: #fff8f0;
+  --background-mint: #e8f5e8;
+  --background-lavender: #f8f0ff;
+  --background-coral: #fce4ec;
+  --background-aqua: #e0f7fa;
+  --background-sunshine: #fff9c4;
+  --background-sage: #f3e5f5;
+
   /* Text Colors */
   --text-dark: #374151;
-  --text-medium: #6B7280;
-  --text-light: #9CA3AF;
-  
+  --text-medium: #6b7280;
+  --text-light: #9ca3af;
+
   /* Gradient Backgrounds */
-  --bg-primary: linear-gradient(135deg, #E8F4FD 0%, #E1F5FE 50%, #F0F8FF 100%);
-  --bg-warm: linear-gradient(135deg, #FFF8F0 0%, #FCE4EC 50%, #FFF3E0 100%);
-  --bg-nature: linear-gradient(135deg, #E8F5E8 0%, #E0F2F1 50%, #F0FFF4 100%);
-  --bg-creative: linear-gradient(135deg, #F8F0FF 0%, #F3E5F5 50%, #E8EAF6 100%);
-  --bg-sunny: linear-gradient(135deg, #FFF9C4 0%, #FFFACD 50%, #FFF8DC 100%);
-  --bg-ocean: linear-gradient(135deg, #E0F7FA 0%, #E1F5FE 50%, #E8F4FD 100%);
+  --bg-primary: linear-gradient(135deg, #e8f4fd 0%, #e1f5fe 50%, #f0f8ff 100%);
+  --bg-warm: linear-gradient(135deg, #fff8f0 0%, #fce4ec 50%, #fff3e0 100%);
+  --bg-nature: linear-gradient(135deg, #e8f5e8 0%, #e0f2f1 50%, #f0fff4 100%);
+  --bg-creative: linear-gradient(135deg, #f8f0ff 0%, #f3e5f5 50%, #e8eaf6 100%);
+  --bg-sunny: linear-gradient(135deg, #fff9c4 0%, #fffacd 50%, #fff8dc 100%);
+  --bg-ocean: linear-gradient(135deg, #e0f7fa 0%, #e1f5fe 50%, #e8f4fd 100%);
 }
 
 /* Preschool-friendly color classes for resource cards */
 .color-0 {
-  background: linear-gradient(135deg, var(--primary-blue) 0%, #40A9FF 100%);
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #40a9ff 100%);
 }
 
 .color-1 {
-  background: linear-gradient(135deg, var(--secondary-coral) 0%, #FF9C6E 100%);
+  background: linear-gradient(135deg, var(--secondary-coral) 0%, #ff9c6e 100%);
 }
 
 .color-2 {
-  background: linear-gradient(135deg, var(--success-green) 0%, #4FBB4F 100%);
+  background: linear-gradient(135deg, var(--success-green) 0%, #4fbb4f 100%);
 }
 
 .color-3 {
-  background: linear-gradient(135deg, var(--warning-gold) 0%, #FFC53D 100%);
+  background: linear-gradient(135deg, var(--warning-gold) 0%, #ffc53d 100%);
 }
 
 .color-4 {
-  background: linear-gradient(135deg, var(--purple-creative) 0%, #A78BFA 100%);
+  background: linear-gradient(135deg, var(--purple-creative) 0%, #a78bfa 100%);
 }
 
 .color-5 {
-  background: linear-gradient(135deg, #20B2AA 0%, #4ECDC4 100%);
+  background: linear-gradient(135deg, #20b2aa 0%, #4ecdc4 100%);
 }
 
 .color-6 {
-  background: linear-gradient(135deg, #DA70D6 0%, #DDA0DD 100%);
+  background: linear-gradient(135deg, #da70d6 0%, #dda0dd 100%);
 }
 
 .color-7 {
-  background: linear-gradient(135deg, var(--error-red) 0%, #FF6B6B 100%);
+  background: linear-gradient(135deg, var(--error-red) 0%, #ff6b6b 100%);
 }
 
 /* Playful animations for interactive elements */
 @keyframes bounce-gentle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 @keyframes wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(1deg); }
-  75% { transform: rotate(-1deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(1deg);
+  }
+  75% {
+    transform: rotate(-1deg);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 5px rgba(24, 144, 255, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(24, 144, 255, 0.6); }
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(24, 144, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(24, 144, 255, 0.6);
+  }
 }
 
 .bounce-on-hover:hover {
@@ -369,8 +491,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes loading-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .loading-container {
@@ -382,7 +509,11 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, rgba(240, 248, 255, 0.95) 0%, rgba(254, 252, 243, 0.95) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(240, 248, 255, 0.95) 0%,
+    rgba(254, 252, 243, 0.95) 100%
+  );
   backdrop-filter: blur(8px);
   z-index: 9999;
 }
@@ -400,7 +531,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .loading::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -510,7 +641,7 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: linear-gradient(135deg, var(--warning-gold) 0%, #FFC53D 100%);
+  background: linear-gradient(135deg, var(--warning-gold) 0%, #ffc53d 100%);
   color: var(--text-dark);
   padding: 6px 12px;
   border-radius: 20px;
@@ -524,7 +655,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Preschool-friendly Modal Card Styling */
 .modal-content {
-  background: linear-gradient(135deg, var(--background-alice) 0%, var(--background-cream) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--background-alice) 0%,
+    var(--background-cream) 100%
+  );
   border-radius: 24px;
   overflow: hidden;
   color: var(--text-dark);
@@ -583,7 +718,7 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: linear-gradient(135deg, var(--warning-gold) 0%, #FFC53D 100%);
+  background: linear-gradient(135deg, var(--warning-gold) 0%, #ffc53d 100%);
   padding: 8px 16px;
   font-weight: 700;
   border-radius: 20px;
@@ -597,7 +732,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Additional preschool-friendly utility classes */
 .playful-button {
-  background: linear-gradient(135deg, var(--primary-blue) 0%, #40A9FF 100%);
+  background: linear-gradient(135deg, var(--primary-blue) 0%, #40a9ff 100%);
   color: white;
   border: none;
   border-radius: 20px;
@@ -642,17 +777,18 @@ h1, h2, h3, h4, h5, h6 {
   .resource-card h2 {
     font-size: 1.2rem;
   }
-  
+
   .modal-content .modal-header {
     font-size: 1.5rem;
   }
-  
+
   .modal-content .modal-body {
     padding: 1.5rem;
   }
-  
-  .date-badge, .modal-date-badge {
+
+  .date-badge,
+  .modal-date-badge {
     font-size: 0.7rem;
     padding: 4px 8px;
   }
-}/*# sourceMappingURL=App.css.map */
+} /*# sourceMappingURL=App.css.map */

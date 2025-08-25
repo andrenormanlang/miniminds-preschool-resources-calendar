@@ -1,8 +1,7 @@
-import { useUser, useAuth } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import { useState, useCallback } from "react";
 
 export const useAuthFetch = () => {
-  const { getToken } = useAuth();
   const { user, isSignedIn } = useUser();
   const [error, setError] = useState<Error | null>(null);
 

@@ -145,7 +145,7 @@ export const createResourceService = (
 export const resourceService = createResourceService(async () => {
   // Fallback implementation
   try {
-    return (await (window as any).Clerk?.session?.getToken()) || null;
+    return (await (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string> } } }).Clerk?.session?.getToken()) || null;
   } catch {
     return null;
   }

@@ -12,7 +12,7 @@ import {
   MenuDivider,
   HStack,
   MenuGroup,
-  Text, // Added Text component for displaying date/time
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import { FiChevronDown, FiMoreVertical } from "react-icons/fi";
 import {
@@ -26,6 +26,7 @@ import { useEffect, useState } from "react";
 import { useAuthFetch } from "../utils/authUtils";
 import { MdDashboard } from "react-icons/md";
 import Logo from "./Logo";
+import MobileNavigation from "./MobileNavigation";
 
 // API base URL configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
@@ -35,27 +36,18 @@ const Header = () => {
   const { authFetch } = useAuthFetch();
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const formattedDate = currentDateTime.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  // Responsive values
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const logoSize = useBreakpointValue({
+    base: "sm" as const,
+    md: "md" as const,
   });
-  const formattedTime = currentDateTime.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
+  const buttonSize = useBreakpointValue({
+    base: "sm" as const,
+    md: "md" as const,
   });
+
 
   // Update user role whenever user or signin status changes
   useEffect(() => {
@@ -110,67 +102,59 @@ const Header = () => {
   return (
     <Box
       bg="#6B46C1"
-      px={4}
+      px={{ base: 3, md: 4 }}
       boxShadow="0 4px 6px rgba(0,0,0,0.1)"
       position="sticky"
       top={0}
       zIndex={1100}
       isolation="isolate"
+      minH={{ base: "60px", md: "64px" }}
+      overflow="visible"
     >
       <Flex
-        h={16}
+        h={{ base: "60px", md: "64px" }}
         alignItems="center"
         justifyContent="space-between"
         position="relative"
-        flexWrap="wrap"
-        pt={{ base: 12, md: 0 }}
-        pb={{ base: 2, md: 0 }}
+        maxW="100%"
+        overflow="visible"
       >
-        <Flex
-          alignItems="center"
-          justifyContent={{ base: "center", md: "flex-start" }}
-          flexWrap="wrap"
-        >
-          {/* Enhanced Logo with modern sans-serif font */}
-          <Logo
-            size="md"
-            variant="default"
-            showIcon={true}
-            showTagline={false}
-            color="white"
-            iconColor="yellow.300"
-            to="/"
-          />
-          {/* Date and Time Display */}
-          <Box
-            ml={{ base: 0, md: 4 }}
-            mt={{ base: 2, md: 0 }}
-            textAlign={{ base: "center", md: "left" }}
-          >
-            {/* <Text
-              fontSize={{ base: "sm", md: "md" }}
-              fontWeight="bold"
+        {/* Left side - Mobile menu + Logo */}
+        <Flex alignItems="center" gap={{ base: 2, md: 4 }} flex="1" minW="0">
+          {/* Mobile Navigation */}
+          {isMobile && isSignedIn && (
+            <MobileNavigation
+              userRole={userRole}
+              canAddResource={canAddResource()}
+              onAddResource={handleAddResource}
+            />
+          )}
+
+          {/* Logo */}
+          <Box minW="0" flex="1">
+            <Logo
+              size={logoSize}
+              variant="default"
+              showIcon={true}
+              showTagline={false}
               color="white"
-              textShadow="1px 1px 2px rgba(0,0,0,0.3)"
-              whiteSpace="nowrap"
-            >
-              {formattedDate}
-            </Text>
-            <Text
-              fontSize={{ base: "xs", md: "sm" }}
-              color="whiteAlpha.800"
-              textShadow="1px 1px 2px rgba(0,0,0,0.3)"
-              whiteSpace="nowrap"
-            >
-              {formattedTime}
-            </Text> */}
+              iconColor="yellow.300"
+              to="/"
+            />
           </Box>
         </Flex>
-        <Flex alignItems="center" gap={3}>
+
+        {/* Right side - User controls */}
+        <Flex
+          alignItems="center"
+          gap={{ base: 1, md: 3 }}
+          flexShrink={0}
+          pr={{ base: 2, md: 4 }}
+        >
           {isSignedIn ? (
-            <Flex alignItems="center" gap={3}>
-              {/* Role Tag with Icon */}
-              {userRole && (
+            <Flex alignItems="center" gap={{ base: 1, md: 3 }}>
+              {/* Role Tag - Hidden on mobile for space */}
+              {userRole && !isMobile && (
                 <Tag
                   bgColor={
                     userRole.toLowerCase() === "superadmin"
@@ -181,9 +165,10 @@ const Header = () => {
                   }
                   color="white"
                   fontWeight="medium"
-                  size="md"
+                  size={buttonSize}
                   p={2}
                   boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                  display={{ base: "none", md: "flex" }}
                 >
                   <HStack spacing={1}>
                     {getRoleIcon(userRole) && (
@@ -193,118 +178,124 @@ const Header = () => {
                         color="yellow.300"
                       />
                     )}
-                    {/* <Text>{formatRoleDisplay(userRole)}</Text> */}
                   </HStack>
                 </Tag>
               )}
 
-              {/* Navigation Menu - Only show for admin and superAdmin */}
-              {userRole && userRole !== "user" && (
-                <Menu>
-                  <MenuButton
-                    as={Button}
-                    size="sm"
-                    aria-label="Navigation"
-                    variant="solid"
-                    bg="white"
-                    color="purple.700"
-                    _hover={{ bg: "gray.100" }}
-                    _active={{ bg: "gray.200" }}
-                    minW="auto"
-                    p={1.5}
-                    borderRadius="full"
-                    boxShadow="0 2px 4px rgba(0,0,0,0.2)"
-                    isDisabled={false}
+              {/* Desktop Navigation Menu */}
+              {userRole && userRole !== "user" && !isMobile && (
+                <Box position="relative">
+                  <Menu
+                    placement="bottom-end"
+                    offset={isMobile ? [-10, 8] : [-40, 8]}
                   >
-                    <FiMoreVertical />
-                  </MenuButton>
-                  <MenuList
-                    zIndex={1000}
-                    bg="white"
-                    shadow="xl"
-                    border="none"
-                    borderRadius="md"
-                    position="relative"
-                    backgroundColor="white"
-                    opacity={1}
-                    sx={{
-                      "& > *": {
-                        // Target all direct children
-                        backgroundColor: "white !important",
-                        opacity: "1 !important",
-                      },
-                      "& .chakra-menu__group": {
-                        backgroundColor: "white !important",
-                      },
-                      "& .chakra-menu__menu-item": {
-                        backgroundColor: "white !important",
-                        opacity: "1 !important",
-                      },
-                    }}
-                  >
-                    {/* Only show Admin Dashboard for superAdmin */}
-                    {userRole === "superAdmin" && (
-                      <>
-                        <MenuGroup
-                          title="Admin Options"
-                          color="purple.600"
-                          fontWeight="bold"
-                        >
-                          <MenuItem
-                            icon={
-                              <Icon
-                                as={MdDashboard}
-                                boxSize={5}
-                                color="purple.500"
-                              />
-                            }
-                            onClick={() => navigate("/admin")}
-                            bg="purple.50"
-                            color="purple.700"
-                            _hover={{ bg: "purple.100" }}
-                            fontWeight="500"
-                            borderLeft="4px solid"
-                            borderColor="purple.500"
-                            paddingLeft="4"
-                            transition="all 0.2s"
+                    <MenuButton
+                      as={Button}
+                      size={buttonSize}
+                      aria-label="Navigation"
+                      variant="solid"
+                      bg="white"
+                      color="purple.700"
+                      _hover={{ bg: "gray.100" }}
+                      _active={{ bg: "gray.200" }}
+                      minW="auto"
+                      p={1.5}
+                      borderRadius="full"
+                      boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                      isDisabled={false}
+                    >
+                      <FiMoreVertical />
+                    </MenuButton>
+                    <MenuList
+                      zIndex={1500}
+                      bg="white"
+                      shadow="xl"
+                      border="none"
+                      borderRadius="md"
+                      backgroundColor="white"
+                      opacity={1}
+                      minW="220px"
+                      maxW="280px"
+                      sx={{
+                        "& > *": {
+                          backgroundColor: "white !important",
+                          opacity: "1 !important",
+                        },
+                        "& .chakra-menu__group": {
+                          backgroundColor: "white !important",
+                        },
+                        "& .chakra-menu__menu-item": {
+                          backgroundColor: "white !important",
+                          opacity: "1 !important",
+                        },
+                      }}
+                    >
+                      {userRole === "superAdmin" && (
+                        <>
+                          <MenuGroup
+                            title="Admin Options"
+                            color="purple.600"
+                            fontWeight="bold"
                           >
-                            Admin Dashboard
-                          </MenuItem>
-                        </MenuGroup>
-                        <MenuDivider borderColor="purple.200" />
-                      </>
-                    )}
+                            <MenuItem
+                              icon={
+                                <Icon
+                                  as={MdDashboard}
+                                  boxSize={5}
+                                  color="purple.500"
+                                />
+                              }
+                              onClick={() => navigate("/admin")}
+                              bg="purple.50"
+                              color="purple.700"
+                              _hover={{ bg: "purple.100" }}
+                              fontWeight="500"
+                              borderLeft="4px solid"
+                              borderColor="purple.500"
+                              paddingLeft="4"
+                              transition="all 0.2s"
+                            >
+                              Admin Dashboard
+                            </MenuItem>
+                          </MenuGroup>
+                          <MenuDivider borderColor="purple.200" />
+                        </>
+                      )}
 
-                    {/* Add Resource option for admins and superAdmins */}
-                    {canAddResource() && (
-                      <MenuItem
-                        onClick={handleAddResource}
-                        icon={
-                          <Icon as={GiBookshelf} boxSize={5} color="teal.500" />
-                        }
-                        bg="teal.50"
-                        color="teal.700"
-                        _hover={{ bg: "teal.100" }}
-                        fontWeight="500"
-                        borderLeft="4px solid"
-                        borderColor="teal.500"
-                        paddingLeft="4"
-                        transition="all 0.2s"
-                      >
-                        Add Resource
-                      </MenuItem>
-                    )}
-                  </MenuList>
-                </Menu>
+                      {canAddResource() && (
+                        <MenuItem
+                          onClick={handleAddResource}
+                          icon={
+                            <Icon
+                              as={GiBookshelf}
+                              boxSize={5}
+                              color="teal.500"
+                            />
+                          }
+                          bg="teal.50"
+                          color="teal.700"
+                          _hover={{ bg: "teal.100" }}
+                          fontWeight="500"
+                          borderLeft="4px solid"
+                          borderColor="teal.500"
+                          paddingLeft="4"
+                          transition="all 0.2s"
+                        >
+                          Add Resource
+                        </MenuItem>
+                      )}
+                    </MenuList>
+                  </Menu>
+                </Box>
               )}
 
-              {/* Clerk User Button with its own dropdown */}
+              {/* User Button */}
               <UserButton
                 appearance={{
                   elements: {
                     userButtonAvatarBox: {
-                      width: "40px",
-                      height: "40px",
+                      width: isMobile ? "32px" : "40px",
+                      height: isMobile ? "32px" : "40px",
                       background: "transparent",
                     },
                     userButtonPopoverCard: {
@@ -312,9 +303,10 @@ const Header = () => {
                       borderColor: "gray.200",
                       boxShadow: "lg",
                       backgroundColor: "white",
-                      zIndex: 1500,
-                      position: "relative",
-                      opacity: 1,
+                      zIndex: "1500 !important",
+                      position: "absolute !important",
+                      opacity: "1 !important",
+                      overflow: "visible",
                     },
                     userButtonPopoverActionButton: {
                       fontWeight: "500",
@@ -363,14 +355,15 @@ const Header = () => {
               <Button
                 bg="white"
                 color="purple.700"
-                size={{ base: "sm", md: "md" }}
+                size={buttonSize}
                 _hover={{ bg: "gray.100" }}
                 _active={{ bg: "gray.200" }}
-                leftIcon={<Icon as={FiChevronDown} />}
+                leftIcon={!isMobile ? <Icon as={FiChevronDown} /> : undefined}
                 fontWeight="500"
                 boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                px={{ base: 3, md: 4 }}
               >
-                Sign In
+                {isMobile ? "Sign In" : "Sign In"}
               </Button>
             </SignInButton>
           )}

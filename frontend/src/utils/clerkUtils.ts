@@ -120,9 +120,14 @@ export const setupClerkDropdownEnhancement = (
   roleIcon: string = ""
 ): void => {
   try {
+    // Define proper type for window with Clerk observer
+    const windowWithObserver = window as Window & {
+      __clerkObserver?: MutationObserver;
+    };
+    
     // First, ensure any previous observers are disconnected
-    if ((window as any).__clerkObserver) {
-      (window as any).__clerkObserver.disconnect();
+    if (windowWithObserver.__clerkObserver) {
+      windowWithObserver.__clerkObserver.disconnect();
     }
 
     // Create a MutationObserver to watch for the dropdown being added to the DOM
@@ -143,7 +148,7 @@ export const setupClerkDropdownEnhancement = (
     });
 
     // Store observer on window object so we can disconnect it later
-    (window as any).__clerkObserver = observer;
+    windowWithObserver.__clerkObserver = observer;
 
     // Start observing the document body for changes
     observer.observe(document.body, { childList: true, subtree: true });

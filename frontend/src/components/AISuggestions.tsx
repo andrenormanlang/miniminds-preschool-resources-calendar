@@ -11,23 +11,21 @@ import {
   Heading,
   Badge,
   useToast,
-  Spinner,
+
   Icon,
   Collapse,
   useDisclosure,
-  Divider,
-  List,
-  ListItem,
-  ListIcon,
+
 } from "@chakra-ui/react";
 import {
   FaLightbulb,
   FaChevronDown,
   FaChevronUp,
   FaCheckCircle,
-  FaStar,
+
 } from "react-icons/fa";
 import { useAIService } from "../services/aiService";
+import type { AISuggestion } from "../types/type.d";
 
 interface ContentSuggestion {
   title: string;
@@ -84,7 +82,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
 
       if (Array.isArray(result)) {
         // Result is already an array of suggestions
-        suggestionsArray = result.map((item) => ({
+        suggestionsArray = result.map((item: AISuggestion) => ({
           title: item.title || "Untitled Activity",
           description: item.description || "No description available",
           materials: item.materials || "",
@@ -93,21 +91,37 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
         }));
       } else if (result && typeof result === "object") {
         // Result is an object, check if it has suggestions property
-        if (result.suggestions) {
-          if (Array.isArray(result.suggestions)) {
-            suggestionsArray = result.suggestions;
+        const resultObj = result as Record<string, unknown>;
+        if (resultObj.suggestions) {
+          if (Array.isArray(resultObj.suggestions)) {
+            suggestionsArray = resultObj.suggestions.map((item: AISuggestion) => ({
+              title: item.title || "Untitled Activity",
+              description: item.description || "No description available",
+              materials: item.materials || "",
+              objectives: item.objectives || "",
+              safety: item.safety || "",
+            }));
           } else {
             // If suggestions is a string, create a single suggestion
             suggestionsArray = [
               {
                 title: `${type} Ideas for ${ageGroup}`,
-                description: result.suggestions,
+                description: String(resultObj.suggestions),
               },
             ];
           }
         } else {
           // Treat the entire object as a single suggestion
-          suggestionsArray = [result as ContentSuggestion];
+          const objAsSuggestion = resultObj as unknown as AISuggestion;
+          suggestionsArray = [
+            {
+              title: objAsSuggestion.title || `${type} Ideas for ${ageGroup}`,
+              description: objAsSuggestion.description || "No description available",
+              materials: objAsSuggestion.materials || "",
+              objectives: objAsSuggestion.objectives || "",
+              safety: objAsSuggestion.safety || "",
+            }
+          ];
         }
       } else {
         // Fallback for unexpected response format

@@ -52,7 +52,7 @@ const AdminPage = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { authFetch } = useAuthFetch();
 

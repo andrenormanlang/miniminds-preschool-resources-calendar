@@ -5,14 +5,12 @@ import {
   FiEdit,
   FiStar,
   FiHeart,
-  FiGrid,
   FiAward,
   FiSun,
   FiBox,
   FiUsers,
   FiSmile,
   FiTarget,
-  FiCircle,
 } from 'react-icons/fi';
 
 // Enhanced icon wrapper component with preschool-friendly styling

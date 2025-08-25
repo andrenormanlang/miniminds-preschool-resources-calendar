@@ -1,7 +1,12 @@
 // Clerk theme configuration for preschool learning platform
 // Child-friendly and warm styling for the UserButton and dropdown
 
-const clerkAppearance: any = {
+interface ClerkThemeConfig {
+  elements?: Record<string, Record<string, unknown>>;
+  variables?: Record<string, unknown>;
+}
+
+const clerkAppearance: ClerkThemeConfig = {
   elements: {
     // Avatar styling - larger with friendly border
     userButtonAvatarBox: {
