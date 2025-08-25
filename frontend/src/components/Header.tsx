@@ -138,7 +138,7 @@ const Header = () => {
               showIcon={true}
               showTagline={false}
               color="white"
-              iconColor="yellow.300"
+              iconColor="#FFB800"
               to="/"
             />
           </Box>
