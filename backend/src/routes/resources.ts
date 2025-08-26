@@ -63,7 +63,7 @@ router.post(
       });
 
       // Check if all required Cloudinary env vars are set
-      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET || !process.env.CLOUDINARY_UPLOAD_PRESET) {
         console.error("Missing Cloudinary configuration");
         return res.status(500).json({ 
           message: "Server configuration error: Missing Cloudinary credentials" 
