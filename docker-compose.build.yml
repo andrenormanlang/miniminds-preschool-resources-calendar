@@ -14,9 +14,11 @@ services:
     networks:
       - app-network
 
-  # Fullstack Application Service
-  app:
-    image: andrenormanlang/miniminds-fullstack:latest
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "4000:4000"
@@ -27,6 +29,28 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/mini_minds?sslmode=disable
     depends_on:
       - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    command: sh -c "bunx prisma migrate deploy && bun run start"
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+    restart: always
+    ports:
+      - "3000:80"
+    env_file:
+      - .env
+    depends_on:
+      - backend
     networks:
       - app-network
 
