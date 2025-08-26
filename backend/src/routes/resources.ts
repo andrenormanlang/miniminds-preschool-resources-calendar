@@ -52,12 +52,23 @@ router.post(
     try {
       console.log("Upload request received:", {
         file: req.file ? "File present" : "No file",
+        fileName: req.file?.originalname,
+        fileSize: req.file?.size,
         cloudinaryConfig: {
           cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "Set" : "Missing",
           api_key: process.env.CLOUDINARY_API_KEY ? "Set" : "Missing",
           api_secret: process.env.CLOUDINARY_API_SECRET ? "Set" : "Missing",
+          upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || "Not set",
         }
       });
+
+      // Check if all required Cloudinary env vars are set
+      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+        console.error("Missing Cloudinary configuration");
+        return res.status(500).json({ 
+          message: "Server configuration error: Missing Cloudinary credentials" 
+        });
+      }
 
       if (req.file && req.file.path) {
         console.log("File uploaded successfully:", req.file.path);

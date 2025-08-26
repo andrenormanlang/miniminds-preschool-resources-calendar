@@ -32,11 +32,13 @@ services:
       - key: CLERK_WEBHOOK_SECRET
         sync: false
       - key: CLOUDINARY_CLOUD_NAME
-        sync: false
+        value: dytiufsuu
       - key: CLOUDINARY_API_KEY
-        sync: false
+        value: 434694764851682
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: CLOUDINARY_UPLOAD_PRESET
+        value: miniminds_preset
       - key: GEMINI_API_KEY
         sync: false
     healthCheckPath: /api/health
