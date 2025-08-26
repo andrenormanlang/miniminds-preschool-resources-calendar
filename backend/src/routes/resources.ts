@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import {
   getAllResources,
   getPendingResources,
@@ -42,43 +42,75 @@ router.get("/admin/pending", isSuperAdmin, getPendingResources); // See pending 
 router.patch("/:id/approve", isSuperAdmin, approveResource); // Approve resource (superAdmin)
 router.put("/:id/reject", isSuperAdmin, rejectResource); // Reject resource (superAdmin)
 
-// Image upload (admin/superAdmin)
-const upload = multer({ storage });
+// Image upload with enhanced error handling and validation
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 1
+  },
+  fileFilter: (req, file, cb) => {
+    // Check file type
+    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+    }
+  }
+});
+
 router.post(
   "/upload",
   isAdminOrSuperAdmin,
-  upload.single("image"),
+  (req: Request, res: Response, next: NextFunction) => {
+    upload.single("image")(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ 
+            message: "File too large. Maximum size is 10MB." 
+          });
+        }
+        return res.status(400).json({ 
+          message: `Upload error: ${err.message}` 
+        });
+      } else if (err) {
+        return res.status(400).json({ 
+          message: err.message 
+        });
+      }
+      next();
+    });
+  },
   async (req: Request, res: Response) => {
     try {
-      console.log("Upload request received:", {
-        file: req.file ? "File present" : "No file",
-        fileName: req.file?.originalname,
-        fileSize: req.file?.size,
-        cloudinaryConfig: {
-          cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "Set" : "Missing",
-          api_key: process.env.CLOUDINARY_API_KEY ? "Set" : "Missing",
-          api_secret: process.env.CLOUDINARY_API_SECRET ? "Set" : "Missing",
-          upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || "Not set",
-        }
-      });
-
-      // Check if all required Cloudinary env vars are set
-      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET || !process.env.CLOUDINARY_UPLOAD_PRESET) {
-        console.error("Missing Cloudinary configuration");
-        return res.status(500).json({ 
-          message: "Server configuration error: Missing Cloudinary credentials" 
+      if (!req.file) {
+        return res.status(400).json({ 
+          message: "No file uploaded. Please select an image file." 
         });
       }
 
-      if (req.file && req.file.path) {
-        console.log("File uploaded successfully:", req.file.path);
-        res.json({ imageUrl: req.file.path });
-      } else {
-        console.error("No file uploaded or file.path missing");
-        res.status(400).json({ message: "No file uploaded" });
-      }
+      // File was successfully uploaded to Cloudinary via multer-storage-cloudinary
+      const imageUrl = req.file.path;
+      const publicId = (req.file as any).filename; // Public ID from Cloudinary
+
+      console.log("✅ File uploaded successfully:", {
+        originalName: req.file.originalname,
+        cloudinaryUrl: imageUrl,
+        publicId: publicId,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      });
+
+      res.status(200).json({ 
+        imageUrl,
+        publicId,
+        originalName: req.file.originalname,
+        size: req.file.size
+      });
+
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("❌ Upload error:", error);
       res.status(500).json({ 
         message: "Upload failed", 
         error: error instanceof Error ? error.message : "Unknown error" 

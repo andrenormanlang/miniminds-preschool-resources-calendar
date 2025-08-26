@@ -52,9 +52,9 @@ const staggerChildren = {
 };
 
 // Styled motion components
-const MotionBox = motion(Box);
-const MotionFlex = motion(Flex);
-const MotionVStack = motion(VStack);
+const MotionBox = motion.create(Box);
+const MotionFlex = motion.create(Flex);
+const MotionVStack = motion.create(VStack);
 
 type ModalCardProps = {
   resource: Resource;
