@@ -2,7 +2,7 @@ import { useUser } from "@clerk/clerk-react";
 import type {  AIRecommendation, ConversationMessage, AISuggestionsResult } from '../types/type.d';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+  import.meta.env.VITE_API_URL || "/api";
 
 export interface AIService {
   generateSuggestions: (

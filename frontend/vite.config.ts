@@ -1,6 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const API_BASE_URL =
+  process.env.VITE_API_URL || "http://localhost:4000";
+
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -9,6 +13,13 @@ export default defineConfig({
     port: 3000,
     watch: {
       usePolling: true,
+    },
+    proxy: {
+      '/api': {
+        target: API_BASE_URL,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   preview: {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Container,
@@ -49,6 +49,32 @@ const AdminDashboard = () => {
   const [pendingResources, setPendingResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Fetch all users
+      const usersData = await authFetch(`${API_BASE_URL}/users`);
+      setUsers(usersData);
+
+      // Fetch pending resources
+      const pendingResourcesData = await authFetch(
+        `${API_BASE_URL}/resources/admin/pending`
+      );
+      setPendingResources(pendingResourcesData);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        status: "error",
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [authFetch, toast]);
+
   useEffect(() => {
     const checkAccess = async () => {
       if (!isSignedIn) {
@@ -75,33 +101,7 @@ const AdminDashboard = () => {
     };
 
     checkAccess();
-  }, [isSignedIn, navigate, authFetch]);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch all users
-      const usersData = await authFetch(`${API_BASE_URL}/users`);
-      setUsers(usersData);
-
-      // Fetch pending resources
-      const pendingResourcesData = await authFetch(
-        `${API_BASE_URL}/resources/admin/pending`
-      );
-      setPendingResources(pendingResourcesData);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
-        status: "error",
-        duration: 5000,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isSignedIn, navigate, authFetch, fetchDashboardData, toast]);
 
   const handleApproveUser = async (userId: number) => {
     try {
@@ -140,7 +140,7 @@ const AdminDashboard = () => {
 
       // Call the correct API endpoint
       const updatedResource = await authFetch(
-        `/api/resources/${resourceId}/approve`,
+        `${API_BASE_URL}/resources/${resourceId}/approve`,
         {
           method: "PATCH",
           headers: {
@@ -178,7 +178,7 @@ const AdminDashboard = () => {
 
   const handleRejectResource = async (resourceId: number) => {
     try {
-      await authFetch(`/api/resources/${resourceId}/reject`, {
+      await authFetch(`${API_BASE_URL}/resources/${resourceId}/reject`, {
         method: "PUT",
       });
 
