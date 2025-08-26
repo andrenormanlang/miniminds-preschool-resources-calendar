@@ -491,15 +491,6 @@ const HomePage = () => {
             >
               Educational Resources
             </Text>
-            <Text
-              fontSize={{ base: "sm", md: "md" }}
-              color="gray.600"
-              maxW="600px"
-              mx="auto"
-            >
-              Discover and manage educational activities, workshops, and
-              resources for preschool children
-            </Text>
           </Box>
 
           {/* Mobile-Responsive Search and Filter */}

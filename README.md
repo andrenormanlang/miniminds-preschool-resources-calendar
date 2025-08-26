@@ -15,7 +15,7 @@ Mini Minds is a platform designed to connect educators and parents with  prescho
 - 📤 **Content Sharing** - Educators can contribute their own resources to the community
 - 🗓️ **Drag-and-Drop Calendar** - Admins can easily reorder and update event dates directly on the calendar.
 - 👑 **Role-Based Access** - Different capabilities for Users, Admins, and Super Admins
-- 📱 **Responsive Design** 
+- 📱 **Responsive Design**
 - 🔐 **Secure Authentication** - Powered by Clerk
 
 ## 🛠️ Tech Stack
@@ -37,12 +37,14 @@ Mini Minds is a platform designed to connect educators and parents with  prescho
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/miniminds.git
    cd miniminds
    ```
 
 2. **Set up the backend**
+
    ```bash
    cd backend
    npm install
@@ -55,6 +57,7 @@ Mini Minds is a platform designed to connect educators and parents with  prescho
    ```
 
 3. **Set up the frontend**
+
    ```bash
    cd frontend
    npm install
@@ -87,7 +90,7 @@ Mini Minds is a platform designed to connect educators and parents with  prescho
 
 ## � Getting Started
 
-### Prerequisites
+### System Requirements
 
 - Node.js (v18 or higher)
 - PostgreSQL database
@@ -98,22 +101,25 @@ Mini Minds is a platform designed to connect educators and parents with  prescho
 ### Environment Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/andrenormanlang/inl5_andre_lang.git
    cd miniminds
    ```
 
 2. **Backend Setup**
+
    ```bash
    cd backend
    npm install
    ```
-   
+
    Copy the environment template and fill in your values:
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `backend/.env` with your actual credentials:
    - `DATABASE_URL`: Your PostgreSQL connection string
    - `CLOUDINARY_*`: Your Cloudinary credentials
@@ -121,20 +127,23 @@ Mini Minds is a platform designed to connect educators and parents with  prescho
    - `CLERK_*`: Your Clerk authentication keys
 
 3. **Frontend Setup**
+
    ```bash
    cd frontend
    bun install
    ```
-   
+
    Copy the environment template and fill in your values:
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `frontend/.env` with your actual credentials:
    - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key
 
 4. **Database Setup**
+
    ```bash
    cd backend
    npx prisma migrate deploy
@@ -142,14 +151,16 @@ Mini Minds is a platform designed to connect educators and parents with  prescho
    ```
 
 5. **Start the application**
-   
+
    Backend (terminal 1):
+
    ```bash
    cd backend
    npm run dev
    ```
-   
+
    Frontend (terminal 2):
+
    ```bash
    cd frontend
    bun dev

@@ -10,22 +10,25 @@ This guide will help you run the MiniMinds application using Docker.
 ## Quick Start
 
 1. **Clone the repository** (if you haven't already):
+
    ```bash
    git clone <your-repository-url>
    cd miniminds
    ```
 
 2. **Set up environment variables**:
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit the `.env` file and fill in your actual values:
    - Clerk authentication keys
    - Gemini AI API key
    - Cloudinary credentials
 
 3. **Build and run the application**:
+
    ```bash
    docker-compose up --build
    ```
@@ -38,43 +41,51 @@ This guide will help you run the MiniMinds application using Docker.
 ## Services
 
 ### Frontend (React + Vite)
+
 - **Port**: 3000
 - **Built with**: Multi-stage Docker build using Nginx for production
-- **Access**: http://localhost:3000
+- **Access**: <http://localhost:3000>
 
 ### Backend (Node.js + Express)
+
 - **Port**: 4000
 - **Database**: PostgreSQL with Prisma ORM
 - **API Endpoint**: <http://localhost:4000/api>
 
 ### Database (PostgreSQL)
+
 - **Port**: 5432
 - **Database Name**: mini_minds
 - **Credentials**: postgres/postgres (for development)
 
 ## Docker Commands
 
-### Start all services:
+### Start all services
+
 ```bash
 docker-compose up
 ```
 
-### Start services in background:
+### Start services in background
+
 ```bash
 docker-compose up -d
 ```
 
-### Rebuild services:
+### Rebuild services
+
 ```bash
 docker-compose up --build
 ```
 
-### Stop all services:
+### Stop all services
+
 ```bash
 docker-compose down
 ```
 
-### View logs:
+### View logs
+
 ```bash
 # All services
 docker-compose logs
@@ -85,7 +96,8 @@ docker-compose logs frontend
 docker-compose logs db
 ```
 
-### Execute commands in containers:
+### Execute commands in containers
+
 ```bash
 # Backend shell
 docker-compose exec backend sh
@@ -99,21 +111,24 @@ docker-compose exec backend npx prisma studio
 
 For development with hot reload, you can run services individually:
 
-### Backend (with file watching):
+### Backend (with file watching)
+
 ```bash
 cd backend
 npm install
 npm run dev
 ```
 
-### Frontend (with Vite dev server):
+### Frontend (with Vite dev server)
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Database only:
+### Database only
+
 ```bash
 docker-compose up db
 ```
@@ -122,7 +137,8 @@ docker-compose up db
 
 Make sure to set these environment variables in your `.env` file:
 
-### Required for Backend:
+### Required for Backend
+
 - `DATABASE_URL`: Already configured for Docker
 - `CLERK_SECRET_KEY`: Your Clerk secret key
 - `GEMINI_API_KEY`: Your Google Gemini API key
@@ -130,9 +146,10 @@ Make sure to set these environment variables in your `.env` file:
 - `CLOUDINARY_API_KEY`: Your Cloudinary API key
 - `CLOUDINARY_API_SECRET`: Your Cloudinary API secret
 
-### Required for Frontend:
+### Required for Frontend
+
 - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key
-- `VITE_API_URL`: Backend API URL (default: http://localhost:5000/api)
+- `VITE_API_URL`: Backend API URL (default: <http://localhost:5000/api>)
 
 ## Database Management
 
@@ -151,21 +168,26 @@ docker-compose up
 
 ## Troubleshooting
 
-### Port conflicts:
+### Port conflicts
+
 If you get port conflict errors, make sure ports 3000, 5000, and 5432 are not being used by other applications.
 
-### Permission issues:
+### Permission issues
+
 On Linux/Mac, you might need to adjust file permissions:
+
 ```bash
 sudo chown -R $USER:$USER .
 ```
 
-### Database connection issues:
+### Database connection issues
+
 - Ensure the database service is running: `docker-compose ps`
 - Check database logs: `docker-compose logs db`
 - Verify environment variables are set correctly
 
-### Frontend build issues:
+### Frontend build issues
+
 - Clear Docker cache: `docker system prune -a`
 - Rebuild without cache: `docker-compose build --no-cache frontend`
 
@@ -181,7 +203,7 @@ For production deployment, make sure to:
 
 ## File Structure
 
-```
+```markdown
 miniminds/
 ├── docker-compose.yml          # Multi-service orchestration
 ├── .env.example               # Environment variables template
