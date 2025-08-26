@@ -1,0 +1,49 @@
+# Multi-stage build for combined frontend + backend deployment
+FROM oven/bun:1 as frontend-build
+
+# Build frontend
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/bun.lockb ./
+RUN bun install
+
+# Build-time environment variables for frontend with defaults
+ARG VITE_API_URL=https://miniminds-preschool-resources-calendar.onrender.com/api
+ARG VITE_CLERK_PUBLISHABLE_KEY
+
+# Set environment variables for the build
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+
+COPY frontend/ .
+RUN bun run build
+
+# Main stage - Backend with frontend served statically
+FROM oven/bun:1
+
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl
+
+WORKDIR /app
+
+# Copy backend files
+COPY backend/package.json backend/bun.lockb ./
+RUN bun install
+
+COPY backend/ .
+
+# Build the TypeScript backend
+RUN bun run build
+
+# Copy built frontend to backend's public directory
+RUN mkdir -p public
+COPY --from=frontend-build /app/frontend/dist ./public
+
+# Copy Prisma files and generate client
+COPY backend/prisma ./prisma
+RUN bunx prisma generate
+
+# Expose port
+EXPOSE 4000
+
+# Start the backend server (which will also serve frontend static files)
+CMD ["bun", "run", "start"]
