@@ -49,10 +49,29 @@ router.post(
   isAdminOrSuperAdmin,
   upload.single("image"),
   async (req: Request, res: Response) => {
-    if (req.file && req.file.path) {
-      res.json({ imageUrl: req.file.path });
-    } else {
-      res.status(400).json({ message: "No file uploaded" });
+    try {
+      console.log("Upload request received:", {
+        file: req.file ? "File present" : "No file",
+        cloudinaryConfig: {
+          cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "Set" : "Missing",
+          api_key: process.env.CLOUDINARY_API_KEY ? "Set" : "Missing",
+          api_secret: process.env.CLOUDINARY_API_SECRET ? "Set" : "Missing",
+        }
+      });
+
+      if (req.file && req.file.path) {
+        console.log("File uploaded successfully:", req.file.path);
+        res.json({ imageUrl: req.file.path });
+      } else {
+        console.error("No file uploaded or file.path missing");
+        res.status(400).json({ message: "No file uploaded" });
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ 
+        message: "Upload failed", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   }
 );

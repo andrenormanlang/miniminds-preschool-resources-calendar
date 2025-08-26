@@ -15,7 +15,12 @@ export const storage = new CloudinaryStorage({
     return {
       folder: 'miniminds', 
       allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp'],
-      public_id: `${Date.now()}-${file.originalname}`, 
+      public_id: `${Date.now()}-${file.originalname}`,
+      resource_type: 'auto',
+      upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || undefined,
     };
   },
 });
+
+// Export cloudinary instance for direct use
+export default cloudinary;
