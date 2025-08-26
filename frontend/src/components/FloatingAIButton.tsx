@@ -58,9 +58,9 @@ const FloatingAIButton: React.FC = () => {
               transform: "scale(0.95)",
             }}
             transition="transform 0.2s"
-            // Better mobile touch target
-            minW={{ base: "48px", md: "auto" }}
-            minH={{ base: "48px", md: "auto" }}
+            // Better mobile touch target and consistent desktop size
+            minW={{ base: "48px", md: "56px" }}
+            minH={{ base: "48px", md: "56px" }}
           />
         </Tooltip>
       </Box>
