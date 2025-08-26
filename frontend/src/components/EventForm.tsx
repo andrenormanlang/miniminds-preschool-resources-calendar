@@ -105,7 +105,7 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
 
   const uploadImage = async (file: File): Promise<boolean> => {
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("image", file, 'miniminds_preset');
 
     setUploading(true);
     setUploadProgress(0);
