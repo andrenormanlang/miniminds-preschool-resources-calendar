@@ -1,25 +1,15 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import { useUser, useAuth } from "@clerk/clerk-react";
+import React, { useState, ReactNode } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { useToast } from "@chakra-ui/react";
+import { ResourceApprovalContext } from "./ResourceApprovalContextType";
 
 // API base URL configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
-
-interface ResourceApprovalContextType {
-  approveResource: (resourceId: number) => Promise<boolean>;
-  rejectResource: (resourceId: number) => Promise<boolean>;
-  isProcessing: boolean;
-}
-
-const ResourceApprovalContext = createContext<
-  ResourceApprovalContextType | undefined
->(undefined);
 
 export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { user, isSignedIn } = useUser();
   const { getToken } = useAuth();
   const toast = useToast();
 
@@ -122,14 +112,4 @@ export const ResourceApprovalProvider: React.FC<{ children: ReactNode }> = ({
       {children}
     </ResourceApprovalContext.Provider>
   );
-};
-
-export const useResourceApproval = () => {
-  const context = useContext(ResourceApprovalContext);
-  if (context === undefined) {
-    throw new Error(
-      "useResourceApproval must be used within a ResourceApprovalProvider"
-    );
-  }
-  return context;
 };

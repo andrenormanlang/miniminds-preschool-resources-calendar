@@ -16,7 +16,7 @@ import {
   Divider
 } from '@chakra-ui/react';
 import { Resource } from '../types/type';
-import { useResourceApproval } from '../contexts/ResourceApprovalContext';
+import { useResourceApproval } from '../hooks/useResourceApproval';
 
 interface ResourceApprovalModalProps {
   resource: Resource;
