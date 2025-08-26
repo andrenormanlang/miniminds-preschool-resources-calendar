@@ -14,6 +14,41 @@ import bodyParser from "body-parser"; // Fixed the typo here
 
 dotenv.config();
 
+// Ensure critical environment variables are set
+const requiredEnvVars = {
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  CLOUDINARY_UPLOAD_PRESET: process.env.CLOUDINARY_UPLOAD_PRESET,
+};
+
+// Debug: Check environment variables
+console.log("Environment check:", {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? "✓ Set" : "✗ Missing",
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY ? "✓ Set" : "✗ Missing",
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET ? "✓ Set" : "✗ Missing",
+  CLOUDINARY_UPLOAD_PRESET: process.env.CLOUDINARY_UPLOAD_PRESET ? "✓ Set" : "✗ Missing (REQUIRED for production)",
+});
+
+// Warn about missing critical variables
+Object.entries(requiredEnvVars).forEach(([key, value]) => {
+  if (!value) {
+    console.error(`❌ Missing required environment variable: ${key}`);
+  }
+});
+
+// Test Cloudinary connection
+import { v2 as cloudinary } from 'cloudinary';
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+console.log("🌤️  Cloudinary configuration loaded");
+
 const app = express();
 const prisma = new PrismaClient();
 

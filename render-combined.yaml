@@ -7,7 +7,7 @@ services:
     dockerContext: ./
     plan: starter
     region: oregon
-    buildCommand: docker build -t andrenormanlang/miniminds-fullstack --build-arg VITE_API_URL=$VITE_API_URL --build-arg VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY .
+    buildCommand: docker build -t andrenormanlang/miniminds-fullstack --build-arg VITE_API_URL=$VITE_API_URL --build-arg VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY --build-arg CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME --build-arg CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY --build-arg CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET --build-arg CLOUDINARY_UPLOAD_PRESET=$CLOUDINARY_UPLOAD_PRESET --build-arg NODE_ENV=$NODE_ENV .
     envVars:
       - key: NODE_ENV
         value: production
