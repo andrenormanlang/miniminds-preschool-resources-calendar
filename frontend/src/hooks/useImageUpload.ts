@@ -61,8 +61,9 @@ export const useImageUpload = () => {
       return null;
     }
 
+    // Create FormData with just the file - remove the preset filename
     const formData = new FormData();
-    formData.append('image', file, 'miniminds_preset');
+    formData.append('image', file); // Remove the 'miniminds_preset' filename
 
     setUploading(true);
     setUploadProgress(0);
@@ -75,50 +76,94 @@ export const useImageUpload = () => {
         throw new Error('Authentication required');
       }
 
-      // Create XMLHttpRequest for progress tracking
-      const xhr = new XMLHttpRequest();
-      
-      const uploadPromise = new Promise<UploadResult>((resolve, reject) => {
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable) {
-            const progress = Math.round((event.loaded / event.total) * 100);
-            setUploadProgress(progress);
-            options.onProgress?.(progress);
-          }
-        });
-
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const result = JSON.parse(xhr.responseText);
-              resolve(result);
-            } catch {
-              reject(new Error('Invalid response format'));
+      // Create XMLHttpRequest for progress tracking with retry logic
+      const uploadWithRetry = async (retries = 3): Promise<UploadResult> => {
+        return new Promise<UploadResult>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          // Add timeout to prevent hanging requests
+          xhr.timeout = 30000; // 30 seconds timeout
+          
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const progress = Math.round((event.loaded / event.total) * 100);
+              setUploadProgress(progress);
+              options.onProgress?.(progress);
             }
-          } else {
-            try {
-              const error = JSON.parse(xhr.responseText);
-              reject(new Error(error.message || `Upload failed: ${xhr.status}`));
-            } catch {
-              reject(new Error(`Upload failed: ${xhr.status}`));
+          });
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const result = JSON.parse(xhr.responseText);
+                resolve(result);
+              } catch (parseError) {
+                console.error('Response parsing error:', parseError);
+                reject(new Error('Invalid response format'));
+              }
+            } else {
+              try {
+                const error = JSON.parse(xhr.responseText);
+                console.error('Upload failed with status:', xhr.status, 'Error:', error);
+                
+                // If it's a 400 error and we have retries left, try again after a short delay
+                if (xhr.status === 400 && retries > 0) {
+                  console.log(`Retrying upload... (${retries} attempts left)`);
+                  setTimeout(() => {
+                    uploadWithRetry(retries - 1).then(resolve).catch(reject);
+                  }, 1000); // Wait 1 second before retry
+                  return;
+                }
+                
+                reject(new Error(error.message || `Upload failed: ${xhr.status}`));
+              } catch (parseError) {
+                console.error('Error response parsing failed:', parseError);
+                reject(new Error(`Upload failed: ${xhr.status}`));
+              }
             }
-          }
+          });
+
+          xhr.addEventListener('error', () => {
+            console.error('Network error during upload');
+            if (retries > 0) {
+              console.log(`Retrying upload due to network error... (${retries} attempts left)`);
+              setTimeout(() => {
+                uploadWithRetry(retries - 1).then(resolve).catch(reject);
+              }, 1000);
+            } else {
+              reject(new Error('Network error during upload'));
+            }
+          });
+
+          xhr.addEventListener('timeout', () => {
+            console.error('Upload timeout');
+            if (retries > 0) {
+              console.log(`Retrying upload due to timeout... (${retries} attempts left)`);
+              setTimeout(() => {
+                uploadWithRetry(retries - 1).then(resolve).catch(reject);
+              }, 1000);
+            } else {
+              reject(new Error('Upload timeout'));
+            }
+          });
+
+          xhr.addEventListener('abort', () => {
+            reject(new Error('Upload cancelled'));
+          });
+
+          // Add cache-busting headers to prevent cached responses
+          xhr.open('POST', `${API_BASE_URL}/resources/upload`);
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          xhr.setRequestHeader('Pragma', 'no-cache');
+          xhr.setRequestHeader('Expires', '0');
+          
+          // Send the request
+          xhr.send(formData);
         });
+      };
 
-        xhr.addEventListener('error', () => {
-          reject(new Error('Network error during upload'));
-        });
-
-        xhr.addEventListener('abort', () => {
-          reject(new Error('Upload cancelled'));
-        });
-      });
-
-      xhr.open('POST', `${API_BASE_URL}/resources/upload`);
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      xhr.send(formData);
-
-      const result = await uploadPromise;
+      const result = await uploadWithRetry();
 
       toast({
         title: 'Image uploaded successfully',
@@ -131,9 +176,11 @@ export const useImageUpload = () => {
     } catch (error) {
       console.error('Upload error:', error);
       
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      
       toast({
         title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'Failed to upload image',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
       });
@@ -151,7 +198,14 @@ export const useImageUpload = () => {
   ): Promise<UploadResult[]> => {
     const results: UploadResult[] = [];
     
-    for (const file of files) {
+    // Add a small delay between uploads to prevent overwhelming the server
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (i > 0) {
+        // Wait 500ms between uploads
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
       const result = await uploadImage(file, options);
       if (result) {
         results.push(result);
@@ -200,6 +254,10 @@ export const useImageUpload = () => {
           file.type,
           quality
         );
+      };
+
+      img.onerror = () => {
+        resolve(file); // Fallback to original file on error
       };
 
       img.src = URL.createObjectURL(file);

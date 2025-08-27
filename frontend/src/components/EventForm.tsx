@@ -58,13 +58,13 @@ const subjectOptions = [
   { value: "Science", label: "Science & Discovery" },
   { value: "Arts", label: "Arts & Crafts" },
   { value: "Music", label: "Music & Movement" },
-  { value: "SocialEmotional", label: "Social-Emotional Learning" },
-  { value: "PhysicalDevelopment", label: "Physical Development" },
+  { value: "Social Emotional", label: "Social-Emotional Learning" },
+  { value: "Physical Development", label: "Physical Development" },
   { value: "SensoryPlay", label: "Sensory Play" },
-  { value: "ProblemSolving", label: "Critical Thinking & Problem Solving" },
-  { value: "WorldCultures", label: "World Cultures & Diversity" },
-  { value: "NatureOutdoors", label: "Nature & Outdoor Learning" },
-  { value: "PlayfulLearning", label: "Playful Learning" },
+  { value: "Problem Solving", label: "Critical Thinking & Problem Solving" },
+  { value: "World Cultures", label: "World Cultures & Diversity" },
+  { value: "Nature Outdoors", label: "Nature & Outdoor Learning" },
+  { value: "Playful Learning", label: "Playful Learning" },
   { value: "Other", label: "Other" },
 ];
 
@@ -76,11 +76,11 @@ const typeOptions = [
   { value: "Song", label: "Song or Rhyme" },
   { value: "Craft", label: "Craft Project" },
   { value: "Experiment", label: "Science Experiment" },
-  { value: "OutdoorActivity", label: "Outdoor Activity" },
-  { value: "DigitalResource", label: "Digital Resource" },
-  { value: "LessonPlan", label: "Lesson Plan" },
-  { value: "VideoLink", label: "Video Link" },
-  { value: "ParentTip", label: "Parent Tip" },
+  { value: "Outdoor Activity", label: "Outdoor Activity" },
+  { value: "Digital Resource", label: "Digital Resource" },
+  { value: "Lesson Plan", label: "Lesson Plan" },
+  { value: "Video Link", label: "Video Link" },
+  { value: "Parent Tip", label: "Parent Tip" },
   { value: "Other", label: "Other" },
 ];
 
@@ -104,8 +104,9 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const uploadImage = async (file: File): Promise<boolean> => {
+    // Create FormData without the preset filename - this was the main issue!
     const formData = new FormData();
-    formData.append("image", file, 'miniminds_preset');
+    formData.append("image", file); // Removed 'miniminds_preset' filename
 
     setUploading(true);
     setUploadProgress(0);
@@ -113,45 +114,94 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
     try {
       const token = await getToken();
 
-      // Create XMLHttpRequest for progress tracking
-      const xhr = new XMLHttpRequest();
-      
-      const uploadPromise = new Promise<{ imageUrl: string; publicId?: string }>((resolve, reject) => {
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable) {
-            const progress = Math.round((event.loaded / event.total) * 100);
-            setUploadProgress(progress);
-          }
-        });
-
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const result = JSON.parse(xhr.responseText);
-              resolve(result);
-            } catch {
-              reject(new Error('Invalid response format'));
+      // Add retry logic for production stability
+      const uploadWithRetry = async (retries = 3): Promise<{ imageUrl: string; publicId?: string }> => {
+        return new Promise<{ imageUrl: string; publicId?: string }>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          // Add timeout to prevent hanging requests
+          xhr.timeout = 30000; // 30 seconds
+          
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const progress = Math.round((event.loaded / event.total) * 100);
+              setUploadProgress(progress);
             }
-          } else {
-            try {
-              const error = JSON.parse(xhr.responseText);
-              reject(new Error(error.message || `Upload failed: ${xhr.status}`));
-            } catch {
-              reject(new Error(`Upload failed: ${xhr.status}`));
+          });
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const result = JSON.parse(xhr.responseText);
+                resolve(result);
+              } catch (parseError) {
+                console.error('Response parsing error:', parseError);
+                reject(new Error(`Invalid response format: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`));
+              }
+            } else {
+              try {
+                const error = JSON.parse(xhr.responseText);
+                console.error('Upload failed with status:', xhr.status, 'Error:', error);
+                
+                // Retry on 400 errors (which often happen due to rate limiting or temporary issues)
+                if (xhr.status === 400 && retries > 0) {
+                  console.log(`Retrying upload... (${retries} attempts left)`);
+                  setTimeout(() => {
+                    uploadWithRetry(retries - 1).then(resolve).catch(reject);
+                  }, 1000 + Math.random() * 1000); // Add jitter to prevent thundering herd
+                  return;
+                }
+                
+                reject(new Error(error.message || `Upload failed: ${xhr.status}`));
+              } catch (parseError) {
+                console.error('Error response parsing failed:', parseError);
+                reject(new Error(`Upload failed: ${xhr.status}`));
+              }
             }
-          }
+          });
+
+          xhr.addEventListener('error', () => {
+            console.error('Network error during upload');
+            if (retries > 0) {
+              console.log(`Retrying upload due to network error... (${retries} attempts left)`);
+              setTimeout(() => {
+                uploadWithRetry(retries - 1).then(resolve).catch(reject);
+              }, 1000 + Math.random() * 1000);
+            } else {
+              reject(new Error('Network error during upload'));
+            }
+          });
+
+          xhr.addEventListener('timeout', () => {
+            console.error('Upload timeout');
+            if (retries > 0) {
+              console.log(`Retrying upload due to timeout... (${retries} attempts left)`);
+              setTimeout(() => {
+                uploadWithRetry(retries - 1).then(resolve).catch(reject);
+              }, 1000 + Math.random() * 1000);
+            } else {
+              reject(new Error('Upload timeout'));
+            }
+          });
+
+          xhr.addEventListener('abort', () => {
+            reject(new Error('Upload cancelled'));
+          });
+
+          // Add cache-busting and connection management headers
+          xhr.open('POST', `${API_BASE_URL}/resources/upload`);
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+          xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          xhr.setRequestHeader('Pragma', 'no-cache');
+          xhr.setRequestHeader('Expires', '0');
+          // Add a unique request ID to help with debugging
+          xhr.setRequestHeader('X-Request-ID', `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+          
+          xhr.send(formData);
         });
+      };
 
-        xhr.addEventListener('error', () => {
-          reject(new Error('Network error during upload'));
-        });
-      });
-
-      xhr.open('POST', `${API_BASE_URL}/resources/upload`);
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      xhr.send(formData);
-
-      const result = await uploadPromise;
+      const result = await uploadWithRetry();
 
       setFormData(prev => ({ ...prev, imageUrl: result.imageUrl }));
 
@@ -166,9 +216,11 @@ const EventForm: React.FC<EventFormProps> = ({ resource, onSubmit }) => {
     } catch (error) {
       console.error('Upload error:', error);
       
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : 'Failed to upload image',
+        description: errorMessage,
         status: "error",
         duration: 5000,
       });
