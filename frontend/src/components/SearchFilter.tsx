@@ -17,7 +17,7 @@ import {
 import { SearchIcon, ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
 import { FiFilter } from "react-icons/fi";
 
-interface MobileSearchFilterProps {
+interface SearchFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   selectedType: string;
@@ -34,7 +34,7 @@ interface MobileSearchFilterProps {
   userRole?: string;
 }
 
-const MobileSearchFilter: React.FC<MobileSearchFilterProps> = ({
+const SearchFilter: React.FC<SearchFilterProps> = ({
   searchQuery,
   onSearchChange,
   selectedType,
@@ -86,49 +86,68 @@ const MobileSearchFilter: React.FC<MobileSearchFilterProps> = ({
         />
       </InputGroup>
 
-      {/* Filter Toggle Button for Mobile */}
-      {isMobile && (
-        <Button
-          variant="outline"
-          leftIcon={<FiFilter />}
-          rightIcon={isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
-          onClick={onToggle}
-          width="100%"
-          justifyContent="space-between"
-          colorScheme={hasActiveFilters ? "purple" : "gray"}
-          size="sm"
-        >
-          <Flex align="center" gap={2}>
-            <Text>Filters</Text>
-            {hasActiveFilters && (
-              <Text
-                bg="purple.100"
-                color="purple.600"
-                px={2}
-                py={0.5}
-                borderRadius="full"
-                fontSize="xs"
-                fontWeight="bold"
-              >
-                Active
-              </Text>
-            )}
-          </Flex>
-        </Button>
-      )}
+      {/* Filter Toggle Button for All Screen Sizes */}
+      <Button
+        variant="outline"
+        leftIcon={<FiFilter />}
+        rightIcon={isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+        onClick={onToggle}
+        width="100%"
+        justifyContent="space-between"
+        colorScheme={hasActiveFilters ? "purple" : "gray"}
+        size={isMobile ? "sm" : "md"}
+        borderRadius="md"
+        _hover={{
+          bg: hasActiveFilters ? "purple.50" : "gray.50",
+          borderColor: hasActiveFilters ? "purple.400" : "gray.400",
+        }}
+      >
+        <Flex align="center" gap={2}>
+          <Text fontWeight="medium">
+            {isOpen ? "Hide Filters" : "Show Filters"}
+          </Text>
+          {hasActiveFilters && (
+            <Text
+              bg="purple.100"
+              color="purple.600"
+              px={2}
+              py={0.5}
+              borderRadius="full"
+              fontSize="xs"
+              fontWeight="bold"
+            >
+              {[
+                selectedType !== "all" ? 1 : 0,
+                selectedSubject !== "all" ? 1 : 0,
+                selectedAgeGroup !== "all" ? 1 : 0,
+                startDate ? 1 : 0,
+                endDate ? 1 : 0,
+              ].reduce((a, b) => a + b, 0)} Active
+            </Text>
+          )}
+        </Flex>
+      </Button>
 
       {/* Filters Section */}
-      <Collapse in={!isMobile || isOpen} animateOpacity>
-        <Box pt={isMobile ? 3 : 0}>
-          {isMobile && <Divider mb={3} />}
+      <Collapse in={isOpen} animateOpacity>
+        <Box pt={3}>
+          <Divider mb={4} />
 
-          <VStack spacing={3} align="stretch">
-            {/* Date Range - Full width on mobile */}
+          <VStack spacing={4} align="stretch">
+            {/* Date Range Section */}
             <Box>
-              <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.700">
-                Date Range
+              <Text 
+                fontSize="sm" 
+                fontWeight="semibold" 
+                mb={3} 
+                color="gray.700"
+                display="flex"
+                alignItems="center"
+                gap={2}
+              >
+                📅 Date Range
               </Text>
-              <VStack spacing={2} align="stretch">
+              <VStack spacing={3} align="stretch">
                 <Input
                   type="date"
                   placeholder="Start Date"
@@ -136,6 +155,10 @@ const MobileSearchFilter: React.FC<MobileSearchFilterProps> = ({
                   onChange={(e) => onStartDateChange(e.target.value)}
                   size={isMobile ? "sm" : "md"}
                   borderRadius="md"
+                  _focus={{
+                    borderColor: "purple.500",
+                    boxShadow: "0 0 0 1px #6B46C1",
+                  }}
                 />
                 <Input
                   type="date"
@@ -144,21 +167,37 @@ const MobileSearchFilter: React.FC<MobileSearchFilterProps> = ({
                   onChange={(e) => onEndDateChange(e.target.value)}
                   size={isMobile ? "sm" : "md"}
                   borderRadius="md"
+                  _focus={{
+                    borderColor: "purple.500",
+                    boxShadow: "0 0 0 1px #6B46C1",
+                  }}
                 />
               </VStack>
             </Box>
 
-            {/* Filter Selects */}
+            {/* Categories Section */}
             <Box>
-              <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.700">
-                Categories
+              <Text 
+                fontSize="sm" 
+                fontWeight="semibold" 
+                mb={3} 
+                color="gray.700"
+                display="flex"
+                alignItems="center"
+                gap={2}
+              >
+                🏷️ Categories
               </Text>
-              <VStack spacing={2} align="stretch">
+              <VStack spacing={3} align="stretch">
                 <Select
                   value={selectedType}
                   onChange={(e) => onTypeChange(e.target.value)}
                   size={isMobile ? "sm" : "md"}
                   borderRadius="md"
+                  _focus={{
+                    borderColor: "purple.500",
+                    boxShadow: "0 0 0 1px #6B46C1",
+                  }}
                 >
                   <option value="all">All Types</option>
                   <option value="Workshop">Workshop</option>
@@ -173,6 +212,10 @@ const MobileSearchFilter: React.FC<MobileSearchFilterProps> = ({
                   onChange={(e) => onSubjectChange(e.target.value)}
                   size={isMobile ? "sm" : "md"}
                   borderRadius="md"
+                  _focus={{
+                    borderColor: "purple.500",
+                    boxShadow: "0 0 0 1px #6B46C1",
+                  }}
                 >
                   <option value="all">All Subjects</option>
                   <option value="Math">Math</option>
@@ -190,6 +233,10 @@ const MobileSearchFilter: React.FC<MobileSearchFilterProps> = ({
                   onChange={(e) => onAgeGroupChange(e.target.value)}
                   size={isMobile ? "sm" : "md"}
                   borderRadius="md"
+                  _focus={{
+                    borderColor: "purple.500",
+                    boxShadow: "0 0 0 1px #6B46C1",
+                  }}
                 >
                   <option value="all">All Age Groups</option>
                   <option value="3-4 years">3-4 years</option>
@@ -202,15 +249,22 @@ const MobileSearchFilter: React.FC<MobileSearchFilterProps> = ({
 
             {/* Clear Filters Button */}
             {hasActiveFilters && (
-              <Button
-                variant="outline"
-                colorScheme="red"
-                size="sm"
-                onClick={onClearFilters}
-                width="100%"
-              >
-                Clear All Filters
-              </Button>
+              <Box pt={2} borderTop="1px solid" borderColor="gray.200">
+                <Button
+                  variant="outline"
+                  colorScheme="red"
+                  size={isMobile ? "sm" : "md"}
+                  onClick={onClearFilters}
+                  width="100%"
+                  borderRadius="md"
+                  _hover={{
+                    bg: "red.50",
+                    borderColor: "red.400",
+                  }}
+                >
+                  🗑️ Clear All Filters
+                </Button>
+              </Box>
             )}
           </VStack>
         </Box>
@@ -219,4 +273,4 @@ const MobileSearchFilter: React.FC<MobileSearchFilterProps> = ({
   );
 };
 
-export default MobileSearchFilter;
+export default SearchFilter;

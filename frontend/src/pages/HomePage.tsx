@@ -35,7 +35,7 @@ import {
 import ModalCard from "../components/ModalCard";
 import EventForm from "../components/EventForm";
 import ResourceCard from "../components/ResourceCard";
-import MobileSearchFilter from "../components/MobileSearchFilter";
+import SearchFilter from "../components/SearchFilter";
 import { EventFormData, Resource } from "../types/type";
 import Loading from "../components/Loading";
 import { useResourceApi } from "../services/api";
@@ -493,8 +493,8 @@ const HomePage = () => {
             </Text>
           </Box>
 
-          {/* Mobile-Responsive Search and Filter */}
-          <MobileSearchFilter
+          {/* Responsive Search and Filter */}
+          <SearchFilter
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             selectedType={selectedType}
