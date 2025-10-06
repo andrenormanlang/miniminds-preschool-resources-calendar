@@ -122,7 +122,8 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
                 selectedAgeGroup !== "all" ? 1 : 0,
                 startDate ? 1 : 0,
                 endDate ? 1 : 0,
-              ].reduce((a, b) => a + b, 0)} Active
+              ].reduce((a, b) => a + b, 0)}{" "}
+              Active
             </Text>
           )}
         </Flex>
@@ -136,10 +137,10 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
           <VStack spacing={4} align="stretch">
             {/* Date Range Section */}
             <Box>
-              <Text 
-                fontSize="sm" 
-                fontWeight="semibold" 
-                mb={3} 
+              <Text
+                fontSize="sm"
+                fontWeight="semibold"
+                mb={3}
                 color="gray.700"
                 display="flex"
                 alignItems="center"
@@ -177,10 +178,10 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
 
             {/* Categories Section */}
             <Box>
-              <Text 
-                fontSize="sm" 
-                fontWeight="semibold" 
-                mb={3} 
+              <Text
+                fontSize="sm"
+                fontWeight="semibold"
+                mb={3}
                 color="gray.700"
                 display="flex"
                 alignItems="center"

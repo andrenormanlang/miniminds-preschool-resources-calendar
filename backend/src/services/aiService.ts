@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import fetch from "node-fetch";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -14,7 +15,20 @@ class AIService {
     }
 
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // Allow the model to be configurable via environment variable.
+    // Default to a widely-supported text generation model for v1beta if not provided.
+    // Default to gemini-2.5-flash (can be overridden by GEN_AI_MODEL env var)
+    const configuredModel = process.env.GEN_AI_MODEL || "gemini-2.5-flash";
+    try {
+      this.model = this.genAI.getGenerativeModel({ model: configuredModel });
+    } catch (err) {
+      console.warn(
+        `Failed to initialize configured model '${configuredModel}', falling back to 'text-bison-001'`,
+        err
+      );
+      this.model = this.genAI.getGenerativeModel({ model: "text-bison-001" });
+    }
   }
 
   /**
@@ -146,6 +160,46 @@ class AIService {
       }
     } catch (error) {
       console.error("Error generating content suggestions:", error);
+
+      // If the error indicates the model isn't supported for generateContent, attempt a fallback
+      // to text-bison-001 (if not already using it) which supports text generation for many tasks.
+      const currentModel = process.env.GEN_AI_MODEL || "text-bison-001";
+      if (currentModel !== "text-bison-001") {
+        try {
+          console.info(
+            "Attempting fallback to text-bison-001 for content generation..."
+          );
+          const fallbackModel = this.genAI.getGenerativeModel({
+            model: "text-bison-001",
+          });
+          const fallbackResult = await fallbackModel.generateContent(prompt);
+          const fallbackResponse = await fallbackResult.response;
+          const fallbackText = fallbackResponse.text();
+          try {
+            const parsed = JSON.parse(fallbackText);
+            return Array.isArray(parsed) ? parsed : [parsed];
+          } catch (parseError) {
+            console.warn(
+              "Fallback response JSON parse failed, returning fallback text:",
+              parseError
+            );
+            return [
+              {
+                title: `Creative ${type} Ideas for ${ageGroup}`,
+                description:
+                  fallbackText.substring(0, 200) +
+                  (fallbackText.length > 200 ? "..." : ""),
+                materials: "See full description for details",
+                objectives: `Suitable for ${ageGroup} focusing on ${subject}`,
+                safety: "Always supervise children during activities",
+              },
+            ];
+          }
+        } catch (fallbackError) {
+          console.error("Fallback generation also failed:", fallbackError);
+        }
+      }
+
       throw new Error("Failed to generate content suggestions");
     }
   }
@@ -198,6 +252,7 @@ class AIService {
       }
     } catch (error) {
       console.error("Error generating recommendations:", error);
+      // don't expose provider details to callers, but include original error in logs
       throw new Error("Failed to generate recommendations");
     }
   }
@@ -299,6 +354,69 @@ class AIService {
       }
     } catch (error) {
       console.error("Error enhancing description:", error);
+
+      // Provide a clearer error message when model is not found and suggest checking config
+      if (
+        error &&
+        (error as any).message &&
+        (error as any).message.includes("not found")
+      ) {
+        throw new Error(
+          `AI model error: ${
+            (error as any).message
+          }. Check GEN_AI_MODEL/GEMINI_API_KEY environment variables and the available models.`
+        );
+      }
+
+      // If OpenAI fallback is configured, try it before failing
+      const openAiKey = process.env.OPENAI_API_KEY;
+      if (openAiKey) {
+        try {
+          console.info("Attempting OpenAI fallback for enhancement...");
+          const openaiResp = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${openAiKey}`,
+              },
+              body: JSON.stringify({
+                model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      "You are an assistant that improves short educational activity descriptions for parents and teachers.",
+                  },
+                  { role: "user", content: prompt },
+                ],
+                max_tokens: 400,
+              }),
+            }
+          );
+
+          if (!openaiResp.ok) {
+            const errText = await openaiResp.text();
+            console.error("OpenAI fallback returned error:", errText);
+          } else {
+            const openaiData: any = await openaiResp.json();
+            const content: string =
+              openaiData?.choices?.[0]?.message?.content || "";
+            try {
+              return JSON.parse(content);
+            } catch (parseError) {
+              return {
+                title: title,
+                description: content,
+              };
+            }
+          }
+        } catch (openError) {
+          console.error("OpenAI fallback failed:", openError);
+        }
+      }
+
       throw new Error("Failed to enhance description");
     }
   }

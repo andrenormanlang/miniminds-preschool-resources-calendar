@@ -11,13 +11,9 @@ import {
   ModalContent,
   ModalCloseButton,
   ModalBody,
-
   useToast,
-
   VStack,
-  
   Icon,
-
   ModalOverlay,
   ModalHeader,
   useBreakpointValue,
@@ -57,7 +53,6 @@ const getRandomColor = () => {
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
-
 
 const swedishHolidays2025 = ["2025-11-01"];
 
@@ -113,11 +108,6 @@ const HomePage = () => {
     lg: 3,
     xl: 4,
   });
-
-  
-
-
-
 
   // Updated Queries
   const { data: allResources = [], isLoading: isLoadingAllResources } =
@@ -235,8 +225,6 @@ const HomePage = () => {
     currentUser,
     searchParams,
   ]);
-
-
 
   // Mutations
   const createResourceMutation = useMutation({
@@ -391,7 +379,6 @@ const HomePage = () => {
 
   // Permission checks
 
-
   const canEditResource = (resource: Resource) => {
     if (!isSignedIn || !currentUser?.role) return false;
     if (currentUser.role === "superAdmin") return true;
@@ -435,7 +422,7 @@ const HomePage = () => {
         return;
       }
 
-      const {  ...rest } = updatedResource;
+      const { ...rest } = updatedResource;
       updateResourceMutation.mutate(
         {
           id: updatedResource.id,
@@ -458,7 +445,6 @@ const HomePage = () => {
       );
     }
   };
-
 
   if (isLoadingAllResources) return <Loading />;
 
